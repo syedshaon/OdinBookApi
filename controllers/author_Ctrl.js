@@ -32,18 +32,19 @@ const verifyToken = async (token) => {
 };
 
 const isAuthenticated = async (req, res, next) => {
-  if (req.headers.authorization) {
-    const authToken = req.headers.authorization;
-  } else {
-    const authToken = req.cookies.token;
-  }
-
-  if (authToken) {
+  if (req.headers.authorization || req.cookies.token) {
+    let authToken = "";
+    if (req.headers.authorization) {
+      authToken = req.headers.authorization;
+    } else {
+      authToken = req.cookies.token;
+    }
     // Validate the auth token.
     const user = await verifyToken(authToken);
     if (user) {
-      req.session.user = user;
-      res.locals.user = user;
+      // req.session.user = user;
+      req.user = user;
+      // res.locals.user = user;
       return next();
     }
   }
@@ -67,10 +68,40 @@ async function generateToken(user) {
 }
 
 const authorController = {
+  async test(req, res) {
+    // return res.json(req.user);
+    const user = req.user;
+
+    const allPostsbyThisAuthor = await Posts.find({ author: user._id });
+    if (allPostsbyThisAuthor.length > 0) {
+      const newUser = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+      };
+      return res.json({ allPostsbyThisAuthor, newUser });
+    } else {
+      return res.json({ message: "You have no posts yet!" });
+    }
+  },
   // If loggedin then show list of blog posts of this user
   async index(req, res) {
-    const authors = await Author.find();
-    res.json(authors);
+    const user = req.user;
+    if (user) {
+      const allPostsbyThisAuthor = await Posts.find({ author: user._id });
+      if (allPostsbyThisAuthor.length > 0) {
+        const newUser = {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
+        };
+        return res.json({ allPostsbyThisAuthor, newUser });
+      } else {
+        return res.json({ message: "You have no posts yet!" });
+      }
+    }
+
+    res.status(401).json({ message: "Unauthorized" });
   },
 
   // Create a new author
@@ -178,143 +209,228 @@ const authorController = {
     const token = await generateToken(user);
 
     // Set the JWT token in a browser cookie
-    res.cookie("token", token, {
-      // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
-      expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
-      httpOnly: true,
-      secure: true,
-    });
+    // res.cookie("token", token, {
+    //   // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
+    //   expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
+    //   httpOnly: true,
+    //   secure: true,
+    // });
 
     // Send the token to the user
     return res.json({ token });
   },
+  async signout(req, res, next) {
+    // Invalidate the user's JWT token.
+    // const token = req.headers.authorization.split(" ")[1];
+    if (req.headers.authorization) {
+      const token = req.headers.authorization;
+
+      const newblacklistedJWT = new BlackJWT({
+        token: token,
+      });
+      const result = await newblacklistedJWT.save();
+
+      res.clearCookie("token");
+      return res.status(201).json({ message: "Signed Out successfully!" });
+    } else {
+      return res.status(401).json({ message: "You need to be logged in to logout." });
+    }
+  },
 
   // Update an existing author
-  async update(req, res, next) {
-    const authToken = req.headers.authorization;
+  async author_update(req, res, next) {
+    // Validate the auth token.
+    const user = req.user;
+    if (user) {
+      try {
+        const { firstName, lastName, email, password, rpassword } = req.body;
 
-    if (authToken) {
-      // Validate the auth token.
-      const user = await verifyToken(authToken);
-      if (user) {
-        try {
-          const { firstName, lastName, email, password, rpassword } = req.body;
+        // Validate the user input
+        if (!firstName || !lastName || !email || !password || !rpassword) {
+          throw new Error("Missing required fields");
+        }
 
-          // Validate the user input
-          if (!firstName || !lastName || !email || !password || !rpassword) {
-            throw new Error("Missing required fields");
+        const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+        if (!email.match(regex)) {
+          throw new Error("Email address is invalid!");
+        }
+
+        // Validate the password
+
+        if (password === email) {
+          throw new Error("Can't use the email address as password.");
+        }
+
+        if (password.length < 8) {
+          throw new Error("Password must be at least 8 characters long");
+        }
+
+        if (!/[A-Z]/.test(password)) {
+          throw new Error("Password must contain at least one uppercase letter");
+        }
+
+        if (!/[a-z]/.test(password)) {
+          throw new Error("Password must contain at least one lowercase letter");
+        }
+
+        if (!/[0-9]/.test(password)) {
+          throw new Error("Password must contain at least one number");
+        }
+
+        // Ensure passwords match
+        if (password !== rpassword) {
+          throw new Error("Passwords do not match");
+        }
+
+        const currentUserID = user._id;
+        const targetUsername = email;
+
+        // Check if the user already exists
+        const existingAuthor = await Author.findOne({
+          _id: { $ne: currentUserID },
+          username: targetUsername,
+        });
+        if (existingAuthor) {
+          throw new Error("Email is already in use");
+        }
+
+        bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+          // if err, do something
+          if (err) {
+            console.log(err);
+          } else {
+            const updatedAuthor = {
+              firstName: req.body.firstName,
+              lastName: req.body.lastName,
+              username: req.body.email,
+              password: hashedPassword,
+            };
+            const author = await Author.findByIdAndUpdate(user._id, updatedAuthor);
+
+            return res.status(201).json({ message: "Author updated successfully" });
           }
+        });
+      } catch (err) {
+        next(err);
+      }
+    }
+  },
 
-          const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  // Delete an existing author
+  async author_delete(req, res) {
+    const user = req.user;
+    if (user) {
+      const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
 
-          if (!email.match(regex)) {
-            throw new Error("Email address is invalid!");
-          }
+      if (allPostsbyThisAuthor.length > 0) {
+        res.status(401).json({ message: "You first need to delete all your blog posts to delete your account." });
+      } else {
+        await Author.findByIdAndDelete(user._id);
+        return res.json({ message: "Author deleted successfully!" });
+      }
+    }
+  },
+  async post_create(req, res, next) {
+    const user = req.user;
+    if (user) {
+      try {
+        const { title, text, published } = req.body;
 
-          // Validate the password
+        // Validate the user input
+        if (!title || !text || !published) {
+          throw new Error("Missing required fields");
+        }
 
-          if (password === email) {
-            throw new Error("Can't use the email address as password.");
-          }
+        // otherwise, store hashedPassword in DB
+        const newPost = new Posts({
+          title: title,
+          text: text,
+          author: user._id,
+          published: published,
+        });
+        const post = await newPost.save();
 
-          if (password.length < 8) {
-            throw new Error("Password must be at least 8 characters long");
-          }
+        // Send a success response
+        return res.status(201).json({ post });
+      } catch (err) {
+        next(err);
+      }
+    }
+  },
+  async post_show(req, res, next) {
+    const user = req.user;
+    const id = req.params.id;
 
-          if (!/[A-Z]/.test(password)) {
-            throw new Error("Password must contain at least one uppercase letter");
-          }
+    const post = await Posts.findById(id);
+    if (post) {
+      if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+        // return res.json({ post: post.author, author: user._id });
+        return res.json({ post: post });
+      }
+    }
+  },
+  async post_edit(req, res, next) {
+    const user = req.user;
+    const id = req.params.id;
 
-          if (!/[a-z]/.test(password)) {
-            throw new Error("Password must contain at least one lowercase letter");
-          }
+    if (user) {
+      const post = await Posts.findById(id);
+      // const val = JSON.stringify(post.author) === JSON.stringify(user._id);
+      // return res.json({ val });
+      if (post) {
+        if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+          // return res.json({ post: post.author, author: user._id });
+          try {
+            const { title, text, published } = req.body;
 
-          if (!/[0-9]/.test(password)) {
-            throw new Error("Password must contain at least one number");
-          }
-
-          // Ensure passwords match
-          if (password !== rpassword) {
-            throw new Error("Passwords do not match");
-          }
-
-          const currentUserID = user._id;
-          const targetUsername = email;
-
-          // Check if the user already exists
-          const existingAuthor = await Author.findOne({
-            _id: { $ne: currentUserID },
-            username: targetUsername,
-          });
-          if (existingAuthor) {
-            throw new Error("Email is already in use");
-          }
-
-          // Save the user to the database
-          // await newAuthor.save();
-
-          bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-            // if err, do something
-            if (err) {
-              console.log(err);
-            } else {
-              // otherwise, store hashedPassword in DB
-              // const updatedAuthor = new Author({
-              //   firstName: req.body.firstName,
-              //   lastName: req.body.lastName,
-              //   username: req.body.email,
-              //   password: hashedPassword,
-              // });
-              const updatedAuthor = {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                username: req.body.email,
-                password: hashedPassword,
-              };
-              const author = await Author.findByIdAndUpdate(user._id, updatedAuthor);
-              // const message = "Author updated successfully";
-              // Send a success response
-
-              return res.status(201).json({ message: "Author updated successfully" });
-
-              //  res.json({ message: message });
-              //return res.json({  "Author updated successfully" });
-              // res.render("report", { title: "Author created successfully!" });
+            // Validate the user input
+            if (!title || !text || !published) {
+              throw new Error("Missing required fields");
             }
-          });
+
+            // console.log("ok");
+            // otherwise, store hashedPassword in DB
+            const updatedPost = {
+              title: title,
+              text: text,
+              author: user._id,
+              published: published,
+            };
+            await Posts.findByIdAndUpdate(id, updatedPost);
+
+            const uPost = await Posts.findById(id);
+
+            // Send a success response
+            return res.status(201).json({ post: uPost });
+          } catch (err) {
+            next(err);
+          }
+        }
+      }
+    }
+  },
+  async post_delete(req, res, next) {
+    const user = req.user;
+    const id = req.params.id;
+
+    const post = await Posts.findById(id);
+    if (post) {
+      if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+        // return res.json({ post: post.author, author: user._id });
+        try {
+          await Posts.findByIdAndDelete(id);
+
+          // Send a success response
+          return res.json({ message: "Post deleted successfully!" });
         } catch (err) {
           next(err);
         }
       }
     } else {
-      // The user is not authenticated.
-      res.status(401).json({ message: "Unauthorized" });
-    }
-  },
-
-  // Delete an existing author
-  async destroy(req, res) {
-    const authToken = req.headers.authorization;
-    if (authToken) {
-      const user = await verifyToken(authToken);
-      if (user) {
-        const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
-
-        if (allPostsbyThisAuthor.length > 0) {
-          res.status(401).json({ message: "You first need to delete all your blog posts to delete your account." });
-        } else {
-          await Author.findByIdAndDelete(user._id);
-          res.json({ message: "Author deleted successfully!" });
-        }
-      } else {
-        // The user is not authenticated.
-        res.status(401).json({ message: "No authorization" });
-      }
-    } else {
-      // The user is not authenticated.
-      res.status(401).json({ message: "Unauthorized" });
+      res.status(401).send("Post not found!");
     }
   },
 };
 
-module.exports = authorController;
+module.exports = { authorController, isAuthenticated };

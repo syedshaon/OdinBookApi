@@ -1,11 +1,8 @@
 var express = require("express");
 var router = express.Router();
-const authorController = require("../controllers/author_Ctrl");
+const { authorController, isAuthenticated } = require("../controllers/author_Ctrl");
 
-/* GET users posts. */
-
-router.get("/", authorController.index);
-
+router.get("/test", isAuthenticated, authorController.test);
 // ################### Sign Up #############################
 //  DONE
 router.post("/signup", authorController.signup);
@@ -14,45 +11,37 @@ router.post("/signup", authorController.signup);
 //  DONE
 router.post("/signin", authorController.signin);
 
-// ######################   Sign Out  ###############################
-//
-//
-//
+// ###################  Sign Out  ###############################
+//  DONE
+router.post("/signout", authorController.signout);
 
 // ################### update an existing author #############################
 // Route to update an existing author
 //  DONE
-router.put("/update", authorController.update);
+router.put("/update", isAuthenticated, authorController.author_update);
 
 // Route to delete an existing author
 //  DONE
-router.delete("/delete", authorController.destroy);
+router.delete("/delete", isAuthenticated, authorController.author_delete);
 
 // ################### Blog Posts #############################
-
-router.get("/posts", function (req, res, next) {
-  // Will show all published and draft posts
-  res.redirect("/");
-});
-
-router.post("/posts", function (req, res, next) {
-  // Need Implementation
-  res.send("Create a new post.");
-});
+// Will show all published and draft posts if logged in
+//  DONE
+router.get("/posts", isAuthenticated, authorController.index);
 
 // ################### Single Post #############################
+// Create single post
+//  DONE
+router.post("/posts", isAuthenticated, authorController.post_create);
 
-router.get("/posts/:id", function (req, res, next) {
-  // Need Implementation
-  res.send("Will show single post.");
-});
-router.put("/posts/:id", function (req, res, next) {
-  // Need Implementation
-  res.send("Will update single post.");
-});
-router.delete("/posts/:id", function (req, res, next) {
-  // Need Implementation
-  res.send("Will delete single post.");
-});
+// Show single post
+//  DONE
+router.get("/posts/:id", isAuthenticated, authorController.post_show);
+// Update single post
+//  DONE
+router.put("/posts/:id", isAuthenticated, authorController.post_edit);
+// Delete single post
+//  DONE
+router.delete("/posts/:id", isAuthenticated, authorController.post_delete);
 
 module.exports = router;
