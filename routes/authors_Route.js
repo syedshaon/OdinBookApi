@@ -11,6 +11,10 @@ router.post("/signup", authorController.signup);
 //  DONE
 router.post("/signin", authorController.signin);
 
+// ################### Sign In #############################
+//  DONE
+router.post("/validateLoginStatus", authorController.validateLoginStatus);
+
 // ###################  Sign Out  ###############################
 //  DONE
 router.post("/signout", authorController.signout);
@@ -18,6 +22,7 @@ router.post("/signout", authorController.signout);
 // ################### update an existing author #############################
 // Route to update an existing author
 //  DONE
+router.get("/update", isAuthenticated, authorController.author_update_get);
 router.put("/update", isAuthenticated, authorController.author_update);
 
 // Route to delete an existing author

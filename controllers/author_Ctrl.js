@@ -95,7 +95,7 @@ const authorController = {
           lastName: user.lastName,
           username: user.username,
         };
-        return res.json({ allPostsbyThisAuthor, newUser });
+        return res.json({ posts: allPostsbyThisAuthor });
       } else {
         return res.json({ message: "You have no posts yet!" });
       }
@@ -186,7 +186,7 @@ const authorController = {
 
   async signin(req, res) {
     // Get the user credentials from the request body
-    const username = req.body.username;
+    const username = req.body.email;
     const password = req.body.password;
 
     // Find the user by their username
@@ -209,15 +209,29 @@ const authorController = {
     const token = await generateToken(user);
 
     // Set the JWT token in a browser cookie
-    // res.cookie("token", token, {
-    //   // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
-    //   expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
-    //   httpOnly: true,
-    //   secure: true,
-    // });
+    res.cookie("token", token, {
+      // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
+      expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
+      httpOnly: true,
+      secure: true,
+    });
 
     // Send the token to the user
-    return res.json({ token });
+    return res.json({ token, firstName: user.firstName });
+  },
+  async validateLoginStatus(req, res) {
+    if (req.headers.authorization) {
+      let authToken = req.headers.authorization;
+
+      // Validate the auth token.
+      const user = await verifyToken(authToken);
+      if (user) {
+        // req.session.user = user;
+
+        return res.json({ firstName: user.firstName });
+      }
+    }
+    return res.json({});
   },
   async signout(req, res, next) {
     // Invalidate the user's JWT token.
@@ -230,11 +244,15 @@ const authorController = {
       });
       const result = await newblacklistedJWT.save();
 
-      res.clearCookie("token");
-      return res.status(201).json({ message: "Signed Out successfully!" });
+      // res.clearCookie("token");
+      return res.status(201).json({ logout: true, message: "Signed Out successfully!" });
     } else {
-      return res.status(401).json({ message: "You need to be logged in to logout." });
+      return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
     }
+  },
+  async author_update_get(req, res, next) {
+    const user = req.user;
+    return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
   },
 
   // Update an existing author
@@ -247,40 +265,48 @@ const authorController = {
 
         // Validate the user input
         if (!firstName || !lastName || !email || !password || !rpassword) {
-          throw new Error("Missing required fields");
+          // throw new Error("Missing required fields");
+          return res.status(422).send({ message: "Missing required fields" });
         }
 
         const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
         if (!email.match(regex)) {
-          throw new Error("Email address is invalid!");
+          // throw new Error("Email address is invalid!");
+          return res.status(422).send({ message: "Email address is invalid!" });
         }
 
         // Validate the password
 
         if (password === email) {
-          throw new Error("Can't use the email address as password.");
+          // throw new Error("Can't use the email address as password.");
+          return res.status(422).send({ message: "Can't use the email address as password." });
         }
 
         if (password.length < 8) {
-          throw new Error("Password must be at least 8 characters long");
+          // throw new Error("Password must be at least 8 characters long");
+          return res.status(422).send({ message: "Password must be at least 8 characters long" });
         }
 
         if (!/[A-Z]/.test(password)) {
-          throw new Error("Password must contain at least one uppercase letter");
+          // throw new Error("Password must contain at least one uppercase letter");
+          return res.status(422).send({ message: "Password must contain at least one uppercase letter" });
         }
 
         if (!/[a-z]/.test(password)) {
-          throw new Error("Password must contain at least one lowercase letter");
+          // throw new Error("Password must contain at least one lowercase letter");
+          return res.status(422).send({ message: "Password must contain at least one lowercase letter" });
         }
 
         if (!/[0-9]/.test(password)) {
-          throw new Error("Password must contain at least one number");
+          // throw new Error("Password must contain at least one number");
+          return res.status(422).send({ message: "Password must contain at least one number" });
         }
 
         // Ensure passwords match
         if (password !== rpassword) {
-          throw new Error("Passwords do not match");
+          // throw new Error("Passwords do not match");
+          return res.status(422).send({ message: "Passwords do not match" });
         }
 
         const currentUserID = user._id;
@@ -292,7 +318,8 @@ const authorController = {
           username: targetUsername,
         });
         if (existingAuthor) {
-          throw new Error("Email is already in use");
+          // throw new Error("Email is already in use");
+          return res.status(422).send({ message: "Email is already in use" });
         }
 
         bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
@@ -324,10 +351,10 @@ const authorController = {
       const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
 
       if (allPostsbyThisAuthor.length > 0) {
-        res.status(401).json({ message: "You first need to delete all your blog posts to delete your account." });
+        res.status(401).json({ delete: false, message: "You first need to delete all your blog posts to delete your account." });
       } else {
         await Author.findByIdAndDelete(user._id);
-        return res.json({ message: "Author deleted successfully!" });
+        return res.json({ delete: true, message: "Author deleted successfully!" });
       }
     }
   },
@@ -352,7 +379,7 @@ const authorController = {
         const post = await newPost.save();
 
         // Send a success response
-        return res.status(201).json({ post });
+        return res.status(201).json({ message: "Post Created Successfully!" });
       } catch (err) {
         next(err);
       }
@@ -366,7 +393,7 @@ const authorController = {
     if (post) {
       if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
         // return res.json({ post: post.author, author: user._id });
-        return res.json({ post: post });
+        return res.json({ title: post.title, text: post.text, published: post.published });
       }
     }
   },

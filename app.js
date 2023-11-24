@@ -2,6 +2,7 @@ require("dotenv").config();
 
 var createError = require("http-errors");
 var express = require("express");
+const cors = require("cors");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
@@ -17,6 +18,9 @@ var indexRouter = require("./routes/index");
 var authorsRouter = require("./routes/authors_Route");
 
 var app = express();
+
+// Enable CORS for all routes
+app.use(cors());
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -42,12 +46,12 @@ app.use(function (err, req, res, next) {
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
   // render the error page
-  // res.status(err.status || 500).json({ message: res.locals.message });
+  res.status(err.status || 500).json({ message: res.locals.message });
   // res.render("error");
-  //res.json({ message: message, status: err.status, stack: err.stack });
+  // res.json({ message: message, status: err.status, stack: err.stack });
 
-  res.status(err.status || 500);
-  res.render("error", { title: "Error!" });
+  // res.status(err.status || 500);
+  // res.render("error", { title: "Error!" });
 });
 
 module.exports = app;

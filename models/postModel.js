@@ -23,7 +23,7 @@ const postSchema = new Schema({
   },
   published: {
     type: String,
-    enum: ["draft", "public"],
+    enum: ["draft", "published"],
     required: true,
   },
   // Make the url field virtual
