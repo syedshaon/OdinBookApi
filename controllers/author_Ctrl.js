@@ -32,25 +32,21 @@ const verifyToken = async (token) => {
 };
 
 const isAuthenticated = async (req, res, next) => {
-  if (req.headers.authorization || req.cookies.token) {
-    let authToken = "";
-    if (req.headers.authorization) {
-      authToken = req.headers.authorization;
-    } else {
-      authToken = req.cookies.token;
-    }
-    // Validate the auth token.
-    const user = await verifyToken(authToken);
-    if (user) {
-      // req.session.user = user;
-      req.user = user;
-      // res.locals.user = user;
-      return next();
-    }
+  let authToken;
+  if (req.headers.authorization) {
+    authToken = req.headers.authorization;
+  }
+  // Validate the auth token.
+  const user = await verifyToken(authToken);
+  if (user) {
+    // req.session.user = user;
+    req.user = user;
+    // res.locals.user = user;
+    return next();
   }
 
   // The user is not authenticated.
-  res.status(401).send("Unauthorized");
+  res.status(401).json({ message: "Unauthorized" });
 };
 
 async function generateToken(user) {
@@ -185,6 +181,41 @@ const authorController = {
   // Authenticate author with jwt
 
   async signin(req, res) {
+    // Get the user credentials from the request body
+    const username = req.body.email;
+    const password = req.body.password;
+
+    // Find the user by their username
+    const user = await Author.findOne({ username });
+
+    // If the user is not found, return an error
+    if (!user) {
+      return res.status(404).json({ message: "Author not found" });
+    }
+
+    // Verify the password
+    const match = await bcrypt.compare(password, user.password);
+
+    // If the password is incorrect, return an error
+    if (!match) {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+
+    // Generate a JWT token for the user
+    const token = await generateToken(user);
+
+    // Set the JWT token in a browser cookie
+    res.cookie("token", token, {
+      // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
+      expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
+      httpOnly: true,
+      secure: true,
+    });
+
+    // Send the token to the user
+    return res.json({ token, firstName: user.firstName });
+  },
+  async refresh(req, res) {
     // Get the user credentials from the request body
     const username = req.body.email;
     const password = req.body.password;
@@ -401,61 +432,68 @@ const authorController = {
     const user = req.user;
     const id = req.params.id;
 
-    if (user) {
-      const post = await Posts.findById(id);
-      // const val = JSON.stringify(post.author) === JSON.stringify(user._id);
-      // return res.json({ val });
-      if (post) {
-        if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
-          // return res.json({ post: post.author, author: user._id });
-          try {
-            const { title, text, published } = req.body;
+    try {
+      if (user) {
+        const post = await Posts.findById(id);
+        // const val = JSON.stringify(post.author) === JSON.stringify(user._id);
+        // return res.json({ val });
+        if (post) {
+          if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+            // return res.json({ post: post.author, author: user._id });
+            try {
+              const { title, text, published } = req.body;
 
-            // Validate the user input
-            if (!title || !text || !published) {
-              throw new Error("Missing required fields");
+              // Validate the user input
+              if (!title || !text || !published) {
+                throw new Error("Missing required fields");
+              }
+
+              // console.log("ok");
+              // otherwise, store hashedPassword in DB
+              const updatedPost = {
+                title: title,
+                text: text,
+                author: user._id,
+                published: published,
+              };
+              await Posts.findByIdAndUpdate(id, updatedPost);
+
+              const uPost = await Posts.findById(id);
+
+              // Send a success response
+              return res.status(201).json({ post: uPost });
+            } catch (err) {
+              next(err);
             }
-
-            // console.log("ok");
-            // otherwise, store hashedPassword in DB
-            const updatedPost = {
-              title: title,
-              text: text,
-              author: user._id,
-              published: published,
-            };
-            await Posts.findByIdAndUpdate(id, updatedPost);
-
-            const uPost = await Posts.findById(id);
-
-            // Send a success response
-            return res.status(201).json({ post: uPost });
-          } catch (err) {
-            next(err);
           }
         }
       }
+    } catch (error) {
+      res.status(401).json({ message: error });
     }
   },
   async post_delete(req, res, next) {
     const user = req.user;
     const id = req.params.id;
+    try {
+      const post = await Posts.findById(id);
+      if (post) {
+        if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+          // return res.json({ post: post.author, author: user._id });
+          try {
+            await Posts.findByIdAndDelete(id);
 
-    const post = await Posts.findById(id);
-    if (post) {
-      if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
-        // return res.json({ post: post.author, author: user._id });
-        try {
-          await Posts.findByIdAndDelete(id);
-
-          // Send a success response
-          return res.json({ message: "Post deleted successfully!" });
-        } catch (err) {
-          next(err);
+            // Send a success response
+            return res.json({ message: "Post deleted successfully!" });
+          } catch (err) {
+            next(err);
+          }
         }
+      } else {
+        res.status(401).json({ message: "Post not found!" });
       }
-    } else {
-      res.status(401).send("Post not found!");
+    } catch (error) {
+      res.status(401).json({ message: error });
     }
   },
 };

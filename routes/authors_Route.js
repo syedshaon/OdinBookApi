@@ -11,7 +11,11 @@ router.post("/signup", authorController.signup);
 //  DONE
 router.post("/signin", authorController.signin);
 
-// ################### Sign In #############################
+// ################### Refresh Token #############################
+//  DONE
+router.post("/refresh", authorController.refresh);
+
+// ################### Validate login status #############################
 //  DONE
 router.post("/validateLoginStatus", authorController.validateLoginStatus);
 
