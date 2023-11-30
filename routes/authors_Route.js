@@ -13,7 +13,7 @@ router.post("/signin", authorController.signin);
 
 // ################### Refresh Token #############################
 //  DONE
-router.post("/refresh", authorController.refresh);
+router.get("/refresh", authorController.refresh);
 
 // ################### Validate login status #############################
 //  DONE

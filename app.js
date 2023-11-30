@@ -20,7 +20,22 @@ var authorsRouter = require("./routes/authors_Route");
 var app = express();
 
 // Enable CORS for all routes
-app.use(cors());
+// app.use(cors());
+
+// Use CORS middleware with the specific origin
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+// Additional headers to set for cookies
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));

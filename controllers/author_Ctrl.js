@@ -31,6 +31,32 @@ const verifyToken = async (token) => {
   }
 };
 
+// // Verify a Refresh token
+const verifyRefreshToken = async (token) => {
+  const isBlacklisted = await BlackJWT.findOne({ token });
+  if (isBlacklisted) {
+    // console.log("Blacklisted JWT: " + isBlacklisted.token);
+    // res.status(401).send("Invalid JWT");
+    const user = false;
+    return user;
+  } else {
+    const secret = process.env.JWT_REFRESH;
+
+    return new Promise((resolve, reject) => {
+      jwt.verify(token, secret, async (err, decodedToken) => {
+        if (err) {
+          // reject(err);
+          const user = false;
+          resolve(user);
+        } else {
+          const user = await Author.findOne({ _id: decodedToken.id });
+          resolve(user);
+        }
+      });
+    });
+  }
+};
+
 const isAuthenticated = async (req, res, next) => {
   let authToken;
   if (req.headers.authorization) {
@@ -57,47 +83,65 @@ async function generateToken(user) {
 
   const secret = process.env.JWT_SECRET;
   const options = {
-    expiresIn: "1h",
+    expiresIn: "15m",
+  };
+
+  return jwt.sign(payload, secret, options);
+}
+
+async function generateRefreshToken(user) {
+  const payload = {
+    id: user._id,
+    username: user.username,
+  };
+
+  const secret = process.env.JWT_REFRESH;
+  const options = {
+    expiresIn: "10d",
   };
 
   return jwt.sign(payload, secret, options);
 }
 
 const authorController = {
-  async test(req, res) {
-    // return res.json(req.user);
-    const user = req.user;
+  // async test(req, res) {
+  //   // return res.json(req.user);
+  //   const user = req.user;
 
-    const allPostsbyThisAuthor = await Posts.find({ author: user._id });
-    if (allPostsbyThisAuthor.length > 0) {
-      const newUser = {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        username: user.username,
-      };
-      return res.json({ allPostsbyThisAuthor, newUser });
-    } else {
-      return res.json({ message: "You have no posts yet!" });
-    }
-  },
+  //   const allPostsbyThisAuthor = await Posts.find({ author: user._id });
+  //   if (allPostsbyThisAuthor.length > 0) {
+  //     const newUser = {
+  //       firstName: user.firstName,
+  //       lastName: user.lastName,
+  //       username: user.username,
+  //     };
+  //     return res.json({ allPostsbyThisAuthor, newUser });
+  //   } else {
+  //     return res.json({ message: "You have no posts yet!" });
+  //   }
+  // },
   // If loggedin then show list of blog posts of this user
   async index(req, res) {
-    const user = req.user;
-    if (user) {
-      const allPostsbyThisAuthor = await Posts.find({ author: user._id });
-      if (allPostsbyThisAuthor.length > 0) {
-        const newUser = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
-        };
-        return res.json({ posts: allPostsbyThisAuthor });
-      } else {
-        return res.json({ message: "You have no posts yet!" });
+    try {
+      const user = req.user;
+      if (user) {
+        const allPostsbyThisAuthor = await Posts.find({ author: user._id });
+        if (allPostsbyThisAuthor.length > 0) {
+          const newUser = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+          };
+          return res.json({ posts: allPostsbyThisAuthor });
+        } else {
+          return res.json({ message: "You have no posts yet!" });
+        }
       }
-    }
 
-    res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   },
 
   // Create a new author
@@ -173,7 +217,7 @@ const authorController = {
         }
       });
     } catch (err) {
-      next(err);
+      return res.status(500).json({ message: "Internal server error" });
       // res.status(401).json({ err });
     }
   },
@@ -181,109 +225,119 @@ const authorController = {
   // Authenticate author with jwt
 
   async signin(req, res) {
-    // Get the user credentials from the request body
-    const username = req.body.email;
-    const password = req.body.password;
+    try {
+      // Get the user credentials from the request body
+      const username = req.body.email;
+      const password = req.body.password;
 
-    // Find the user by their username
-    const user = await Author.findOne({ username });
+      // Find the user by their username
+      const user = await Author.findOne({ username });
 
-    // If the user is not found, return an error
-    if (!user) {
-      return res.status(404).json({ message: "Author not found" });
+      // If the user is not found, return an error
+      if (!user) {
+        return res.status(404).json({ message: "Author not found" });
+      }
+
+      // Verify the password
+      const match = await bcrypt.compare(password, user.password);
+
+      // If the password is incorrect, return an error
+      if (!match) {
+        return res.status(401).json({ message: "Incorrect password" });
+      }
+
+      // Generate a JWT token for the user
+      const token = await generateToken(user);
+      const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
+      const refreshtoken = await generateRefreshToken(user);
+
+      // Set the JWT Refresh token in  browser cookie
+      res.cookie("refreshtoken", refreshtoken, {
+        // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
+        expires: new Date(Date.now() + 60 * 60 * 24 * 10 * 1000), // Expires in 10 days
+        httpOnly: true,
+        secure: true,
+      });
+
+      // Send the token to the user
+      return res.json({ token, expire: tokenExpires, firstName: user.firstName });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
     }
-
-    // Verify the password
-    const match = await bcrypt.compare(password, user.password);
-
-    // If the password is incorrect, return an error
-    if (!match) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
-
-    // Generate a JWT token for the user
-    const token = await generateToken(user);
-
-    // Set the JWT token in a browser cookie
-    res.cookie("token", token, {
-      // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
-      expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
-      httpOnly: true,
-      secure: true,
-    });
-
-    // Send the token to the user
-    return res.json({ token, firstName: user.firstName });
   },
   async refresh(req, res) {
-    // Get the user credentials from the request body
-    const username = req.body.email;
-    const password = req.body.password;
+    // Verify refresh token
 
-    // Find the user by their username
-    const user = await Author.findOne({ username });
+    try {
+      if (!req.cookies.refreshtoken) {
+        return res.status(500).json({ message: "No Refresh Token Provided.", error: true });
+      }
 
-    // If the user is not found, return an error
-    if (!user) {
-      return res.status(404).json({ message: "Author not found" });
-    }
-
-    // Verify the password
-    const match = await bcrypt.compare(password, user.password);
-
-    // If the password is incorrect, return an error
-    if (!match) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
-
-    // Generate a JWT token for the user
-    const token = await generateToken(user);
-
-    // Set the JWT token in a browser cookie
-    res.cookie("token", token, {
-      // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
-      expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 60 min
-      httpOnly: true,
-      secure: true,
-    });
-
-    // Send the token to the user
-    return res.json({ token, firstName: user.firstName });
-  },
-  async validateLoginStatus(req, res) {
-    if (req.headers.authorization) {
-      let authToken = req.headers.authorization;
+      const RefreshToken = req.cookies.refreshtoken;
 
       // Validate the auth token.
-      const user = await verifyToken(authToken);
-      if (user) {
-        // req.session.user = user;
+      const user = await verifyRefreshToken(RefreshToken);
 
-        return res.json({ firstName: user.firstName });
+      // If the user is not found, return an error
+      if (!user) {
+        return res.status(404).json({ message: "Author not found", error: true });
       }
+
+      // Generate a JWT token for the user
+      const token = await generateToken(user);
+      const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
+      // Send the token to the user
+      return res.json({ token, expire: tokenExpires, firstName: user.firstName });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
     }
-    return res.json({});
+  },
+  async validateLoginStatus(req, res) {
+    try {
+      if (req.headers.authorization) {
+        let authToken = req.headers.authorization;
+
+        // Validate the auth token.
+        const user = await verifyToken(authToken);
+        if (user) {
+          // req.session.user = user;
+
+          return res.json({ firstName: user.firstName });
+        }
+      }
+      return res.json({});
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   },
   async signout(req, res, next) {
-    // Invalidate the user's JWT token.
-    // const token = req.headers.authorization.split(" ")[1];
-    if (req.headers.authorization) {
-      const token = req.headers.authorization;
+    try {
+      // Invalidate the user's JWT token.
+      // const token = req.headers.authorization.split(" ")[1];
+      if (req.headers.authorization) {
+        const token = req.headers.authorization;
 
-      const newblacklistedJWT = new BlackJWT({
-        token: token,
-      });
-      const result = await newblacklistedJWT.save();
+        const newblacklistedJWT = new BlackJWT({
+          token: token,
+        });
+        const result = await newblacklistedJWT.save();
 
-      // res.clearCookie("token");
-      return res.status(201).json({ logout: true, message: "Signed Out successfully!" });
-    } else {
-      return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
+        // res.clearCookie("token");
+        return res.status(201).json({ logout: true, message: "Signed Out successfully!" });
+      } else {
+        return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
   async author_update_get(req, res, next) {
-    const user = req.user;
-    return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
+    try {
+      const user = req.user;
+      return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   },
 
   // Update an existing author
@@ -370,23 +424,27 @@ const authorController = {
           }
         });
       } catch (err) {
-        next(err);
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
   },
 
   // Delete an existing author
   async author_delete(req, res) {
-    const user = req.user;
-    if (user) {
-      const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
+    try {
+      const user = req.user;
+      if (user) {
+        const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
 
-      if (allPostsbyThisAuthor.length > 0) {
-        res.status(401).json({ delete: false, message: "You first need to delete all your blog posts to delete your account." });
-      } else {
-        await Author.findByIdAndDelete(user._id);
-        return res.json({ delete: true, message: "Author deleted successfully!" });
+        if (allPostsbyThisAuthor.length > 0) {
+          res.status(401).json({ delete: false, message: "You first need to delete all your blog posts to delete your account." });
+        } else {
+          await Author.findByIdAndDelete(user._id);
+          return res.json({ delete: true, message: "Author deleted successfully!" });
+        }
       }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
   async post_create(req, res, next) {
@@ -412,20 +470,24 @@ const authorController = {
         // Send a success response
         return res.status(201).json({ message: "Post Created Successfully!" });
       } catch (err) {
-        next(err);
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
   },
   async post_show(req, res, next) {
-    const user = req.user;
-    const id = req.params.id;
+    try {
+      const user = req.user;
+      const id = req.params.id;
 
-    const post = await Posts.findById(id);
-    if (post) {
-      if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
-        // return res.json({ post: post.author, author: user._id });
-        return res.json({ title: post.title, text: post.text, published: post.published });
+      const post = await Posts.findById(id);
+      if (post) {
+        if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+          // return res.json({ post: post.author, author: user._id });
+          return res.json({ title: post.title, text: post.text, published: post.published });
+        }
       }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
   async post_edit(req, res, next) {
