@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const { authorController, isAuthenticated } = require("../controllers/author_Ctrl");
 
-router.get("/test", isAuthenticated, authorController.test);
+// router.get("/test", isAuthenticated, authorController.test);
 // ################### Sign Up #############################
 //  DONE
 router.post("/signup", authorController.signup);
