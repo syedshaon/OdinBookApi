@@ -1,4 +1,4 @@
-const Author = require("../models/authorModel");
+const Visitor = require("../models/visitorModel");
 const Posts = require("../models/postModel");
 const BlackJWT = require("../models/blackjwt");
 
@@ -23,7 +23,7 @@ const verifyToken = async (token) => {
           const user = false;
           resolve(user);
         } else {
-          const user = await Author.findOne({ _id: decodedToken.id });
+          const user = await Visitor.findOne({ _id: decodedToken.id });
           resolve(user);
         }
       });
@@ -49,7 +49,7 @@ const verifyRefreshToken = async (token) => {
           const user = false;
           resolve(user);
         } else {
-          const user = await Author.findOne({ _id: decodedToken.id });
+          const user = await Visitor.findOne({ _id: decodedToken.id });
           resolve(user);
         }
       });
@@ -103,19 +103,19 @@ async function generateRefreshToken(user) {
   return jwt.sign(payload, secret, options);
 }
 
-const authorController = {
+const readerController = {
   // async test(req, res) {
   //   // return res.json(req.user);
   //   const user = req.user;
 
-  //   const allPostsbyThisAuthor = await Posts.find({ author: user._id });
-  //   if (allPostsbyThisAuthor.length > 0) {
+  //   const allPostsbyThisVisitor = await Posts.find({ author: user._id });
+  //   if (allPostsbyThisVisitor.length > 0) {
   //     const newUser = {
   //       firstName: user.firstName,
   //       lastName: user.lastName,
   //       username: user.username,
   //     };
-  //     return res.json({ allPostsbyThisAuthor, newUser });
+  //     return res.json({ allPostsbyThisVisitor, newUser });
   //   } else {
   //     return res.json({ message: "You have no posts yet!" });
   //   }
@@ -123,28 +123,43 @@ const authorController = {
   // If loggedin then show list of blog posts of this user
   async index(req, res) {
     try {
-      const user = req.user;
-      if (user) {
-        const allPostsbyThisAuthor = await Posts.find({ author: user._id });
-        if (allPostsbyThisAuthor.length > 0) {
-          const newUser = {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-          };
-          return res.json({ posts: allPostsbyThisAuthor });
-        } else {
-          return res.json({ message: "You have no posts yet!" });
-        }
+      const allPosts = await Posts.find({ published: "published" })
+        .populate({
+          path: "author",
+          model: "Author",
+          select: "firstName lastName",
+        }) // Populate the 'author' field with 'name' field from the Author model
+        .exec();
+      if (allPosts.length > 0) {
+        return res.json({ posts: allPosts });
+      } else {
+        return res.json({ message: "No Published posts!" });
       }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  },
+  async post_show(req, res, next) {
+    try {
+      const id = req.params.id;
+      // return res.json({ id });
 
-      res.status(401).json({ message: "Unauthorized" });
+      const post = await Posts.findById(id)
+        .populate({
+          path: "author",
+          model: "Author",
+          select: "firstName lastName",
+        }) // Populate the 'author' field with 'name' field from the Author model
+        .exec();
+      if (post) {
+        return res.json({ post });
+      }
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
   },
 
-  // Create a new author
+  // Create a new reader
   async signup(req, res, next) {
     try {
       const { firstName, lastName, email, password, rpassword } = req.body;
@@ -188,13 +203,13 @@ const authorController = {
       }
 
       // Check if the user already exists
-      const existingAuthor = await Author.findOne({ username: email });
-      if (existingAuthor) {
+      const existingVisitor = await Visitor.findOne({ username: email });
+      if (existingVisitor) {
         throw new Error("Email is already in use");
       }
 
       // Save the user to the database
-      // await newAuthor.save();
+      // await newVisitor.save();
 
       bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
         // if err, do something
@@ -202,23 +217,24 @@ const authorController = {
           console.log(err);
         } else {
           // otherwise, store hashedPassword in DB
-          const newAuthor = new Author({
+          const newReader = new Visitor({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             username: req.body.email,
             password: hashedPassword,
           });
-          const author = await newAuthor.save();
-          const message = "An author account with " + author.username + " email address created successfully!";
-          // res.json(author);
+          const visitor = await newReader.save();
+          const message = "A Reader account with " + visitor.username + " email address created successfully!";
+          // res.json(visitor);
           // Send a success response
           res.status(201).json({ message: message });
-          // res.render("report", { title: "Author created successfully!" });
+          // res.render("report", { title: "Visitor created successfully!" });
         }
       });
     } catch (err) {
       return res.status(500).json({ message: "Internal server error" });
-      // res.status(401).json({ err });
+      // res.json({ err });
+      // console.log(err);
     }
   },
 
@@ -231,11 +247,11 @@ const authorController = {
       const password = req.body.password;
 
       // Find the user by their username
-      const user = await Author.findOne({ username });
+      const user = await Visitor.findOne({ username });
 
       // If the user is not found, return an error
       if (!user) {
-        return res.status(404).json({ message: "Author not found" });
+        return res.status(404).json({ message: "Visitor not found" });
       }
 
       // Verify the password
@@ -280,7 +296,7 @@ const authorController = {
 
       // If the user is not found, return an error
       if (!user) {
-        return res.status(404).json({ message: "Author not found", error: true });
+        return res.status(404).json({ message: "Visitor not found", error: true });
       }
 
       // Generate a JWT token for the user
@@ -322,8 +338,9 @@ const authorController = {
         });
         const result = await newblacklistedJWT.save();
 
-        // res.clearCookie("token");
         res.clearCookie("refreshtoken");
+
+        // res.clearCookie("token");
         return res.status(201).json({ logout: true, message: "Signed Out successfully!" });
       } else {
         return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
@@ -399,11 +416,11 @@ const authorController = {
         const targetUsername = email;
 
         // Check if the user already exists
-        const existingAuthor = await Author.findOne({
+        const existingVisitor = await Visitor.findOne({
           _id: { $ne: currentUserID },
           username: targetUsername,
         });
-        if (existingAuthor) {
+        if (existingVisitor) {
           // throw new Error("Email is already in use");
           return res.status(422).send({ message: "Email is already in use" });
         }
@@ -413,16 +430,17 @@ const authorController = {
           if (err) {
             console.log(err);
           } else {
-            const updatedAuthor = {
+            const updatedVisitor = {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               username: req.body.email,
               password: hashedPassword,
             };
-            const author = await Author.findByIdAndUpdate(user._id, updatedAuthor);
+            const author = await Visitor.findByIdAndUpdate(user._id, updatedVisitor);
+
             res.clearCookie("refreshtoken");
 
-            return res.status(201).json({ message: "Author updated successfully" });
+            return res.status(201).json({ message: "Visitor updated successfully" });
           }
         });
       } catch (err) {
@@ -436,14 +454,16 @@ const authorController = {
     try {
       const user = req.user;
       if (user) {
-        const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
+        const allPostsbyThisVisitor = await Posts.find({ author: user._id }, "title text").exec();
 
-        if (allPostsbyThisAuthor.length > 0) {
+        if (allPostsbyThisVisitor.length > 0) {
           res.status(401).json({ delete: false, message: "You first need to delete all your blog posts to delete your account." });
         } else {
-          await Author.findByIdAndDelete(user._id);
+          await Visitor.findByIdAndDelete(user._id);
+
           res.clearCookie("refreshtoken");
-          return res.json({ delete: true, message: "Author deleted successfully!" });
+
+          return res.json({ delete: true, message: "Visitor deleted successfully!" });
         }
       }
     } catch (error) {
@@ -477,22 +497,7 @@ const authorController = {
       }
     }
   },
-  async post_show(req, res, next) {
-    try {
-      const user = req.user;
-      const id = req.params.id;
 
-      const post = await Posts.findById(id);
-      if (post) {
-        if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
-          // return res.json({ post: post.author, author: user._id });
-          return res.json({ title: post.title, text: post.text, published: post.published });
-        }
-      }
-    } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  },
   async post_edit(req, res, next) {
     const user = req.user;
     const id = req.params.id;
@@ -563,4 +568,4 @@ const authorController = {
   },
 };
 
-module.exports = { authorController, isAuthenticated };
+module.exports = { readerController, isAuthenticated };

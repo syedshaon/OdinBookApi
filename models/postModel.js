@@ -31,7 +31,7 @@ const postSchema = new Schema({
     type: String,
     virtual: true,
     get() {
-      return `/messages/${this._id}`;
+      return `/posts/${this._id}`;
     },
   },
 });

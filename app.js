@@ -14,7 +14,7 @@ mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connecion error: "));
 
-var indexRouter = require("./routes/index");
+var indexRouter = require("./routes/reader_Route");
 var authorsRouter = require("./routes/authors_Route");
 
 var app = express();
@@ -50,7 +50,7 @@ app.use(express.urlencoded({ limit: "2mb", extended: true, parameterLimit: 5000 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/blogs", indexRouter);
+app.use("/blogsAPI", indexRouter);
 app.use("/authorAPI", authorsRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

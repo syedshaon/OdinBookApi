@@ -23,14 +23,8 @@ const visitorSchema = new Schema({
     type: String,
     virtual: true,
     get() {
-      return `/users/${this._id}`;
+      return `/readers/${this._id}`;
     },
-  },
-  isactive: {
-    type: String,
-    enum: ["true", "false"],
-    default: "false",
-    required: false,
   },
 });
 
