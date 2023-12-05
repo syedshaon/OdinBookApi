@@ -139,7 +139,7 @@ const authorController = {
       }
 
       res.status(401).json({ message: "Unauthorized" });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -275,7 +275,7 @@ const authorController = {
 
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -308,7 +308,7 @@ const authorController = {
       const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -332,7 +332,7 @@ const authorController = {
         }
       }
       return res.json({});
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -360,7 +360,7 @@ const authorController = {
       } else {
         return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -374,7 +374,7 @@ const authorController = {
     try {
       const user = req.user;
       return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -496,7 +496,7 @@ const authorController = {
           return res.json({ delete: true, message: "Author deleted successfully!" });
         }
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -551,7 +551,7 @@ const authorController = {
           return res.json({ title: post.title, text: post.text, published: post.published });
         }
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -601,7 +601,7 @@ const authorController = {
           }
         }
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -637,7 +637,7 @@ const authorController = {
       } else {
         res.status(401).json({ message: "Post not found!" });
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
