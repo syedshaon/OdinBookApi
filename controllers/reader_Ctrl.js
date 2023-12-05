@@ -119,7 +119,7 @@ const readerController = {
       } else {
         return res.json({ message: "No Published posts!" });
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -142,9 +142,13 @@ const readerController = {
         }) // Populate the 'author' field with 'name' field from the Author model
         .exec();
       if (post) {
-        return res.json({ post });
+        if (post.published === "draft") {
+          return res.json({ message: "Post you requested is in Draft mode!" });
+        } else {
+          return res.json({ post });
+        }
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -277,7 +281,7 @@ const readerController = {
 
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -310,7 +314,7 @@ const readerController = {
       const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -334,7 +338,7 @@ const readerController = {
         }
       }
       return res.json({});
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -363,7 +367,7 @@ const readerController = {
       } else {
         return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -377,7 +381,7 @@ const readerController = {
     try {
       const user = req.user;
       return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -502,7 +506,7 @@ const readerController = {
           return res.json({ delete: true, message: "Visitor deleted successfully!" });
         }
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -559,7 +563,7 @@ const readerController = {
       } else {
         return res.json({ message: "No Published posts!" });
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -616,7 +620,7 @@ const readerController = {
           }
         }
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
@@ -652,7 +656,7 @@ const readerController = {
       } else {
         res.status(401).json({ message: "Post not found!" });
       }
-    } catch (error) {
+    } catch (err) {
       let errorMessage = "Internal server error";
 
       if (err instanceof Error) {
