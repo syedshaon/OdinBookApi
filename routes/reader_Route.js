@@ -34,23 +34,27 @@ router.post("/signout", readerController.signout);
 // ################### update an existing author #############################
 // Route to update an existing author
 //  DONE
-router.get("/update", isAuthenticated, readerController.author_update_get);
-router.put("/update", isAuthenticated, readerController.author_update);
+router.get("/update", isAuthenticated, readerController.reader_update_get);
+router.put("/update", isAuthenticated, readerController.reader_update);
 
 // Route to delete an existing author
 //  DONE
-router.delete("/delete", isAuthenticated, readerController.author_delete);
+router.delete("/delete", isAuthenticated, readerController.reader_delete);
 
 // ################### Single Post #############################
-// Create single post
+// Create single comments
 //  DONE
-router.post("/posts", isAuthenticated, readerController.post_create);
+router.post("/comments", isAuthenticated, readerController.comments_create);
 
-// Update single post
+// Create single comments
 //  DONE
-router.put("/posts/:id", isAuthenticated, readerController.post_edit);
-// Delete single post
+router.get("/comments/:id", readerController.comments_get);
+
+// Update single comments
 //  DONE
-router.delete("/posts/:id", isAuthenticated, readerController.post_delete);
+router.put("/comments/:id", isAuthenticated, readerController.comments_edit);
+// Delete single comments
+//  DONE
+router.delete("/comments/:id", isAuthenticated, readerController.comments_delete);
 
 module.exports = router;

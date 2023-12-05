@@ -21,11 +21,26 @@ var app = express();
 
 // Enable CORS for all routes
 // app.use(cors());
+const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
 
 // Use CORS middleware with the specific origin
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Check if the origin is in the allowed list or if it's not defined (e.g., a same-origin request)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );

@@ -1,5 +1,6 @@
 const Visitor = require("../models/visitorModel");
 const Posts = require("../models/postModel");
+const Comments = require("../models/commentModel");
 const BlackJWT = require("../models/blackjwt");
 
 const jwt = require("jsonwebtoken");
@@ -104,23 +105,6 @@ async function generateRefreshToken(user) {
 }
 
 const readerController = {
-  // async test(req, res) {
-  //   // return res.json(req.user);
-  //   const user = req.user;
-
-  //   const allPostsbyThisVisitor = await Posts.find({ author: user._id });
-  //   if (allPostsbyThisVisitor.length > 0) {
-  //     const newUser = {
-  //       firstName: user.firstName,
-  //       lastName: user.lastName,
-  //       username: user.username,
-  //     };
-  //     return res.json({ allPostsbyThisVisitor, newUser });
-  //   } else {
-  //     return res.json({ message: "You have no posts yet!" });
-  //   }
-  // },
-  // If loggedin then show list of blog posts of this user
   async index(req, res) {
     try {
       const allPosts = await Posts.find({ published: "published" })
@@ -349,7 +333,7 @@ const readerController = {
       return res.status(500).json({ message: "Internal server error" });
     }
   },
-  async author_update_get(req, res, next) {
+  async reader_update_get(req, res, next) {
     try {
       const user = req.user;
       return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
@@ -358,8 +342,8 @@ const readerController = {
     }
   },
 
-  // Update an existing author
-  async author_update(req, res, next) {
+  // Update an existing reader
+  async reader_update(req, res, next) {
     // Validate the auth token.
     const user = req.user;
     if (user) {
@@ -450,7 +434,7 @@ const readerController = {
   },
 
   // Delete an existing author
-  async author_delete(req, res) {
+  async reader_delete(req, res) {
     try {
       const user = req.user;
       if (user) {
@@ -470,35 +454,53 @@ const readerController = {
       return res.status(500).json({ message: "Internal server error" });
     }
   },
-  async post_create(req, res, next) {
+  async comments_create(req, res, next) {
     const user = req.user;
     if (user) {
       try {
-        const { title, text, published } = req.body;
+        const { text, postId } = req.body;
 
         // Validate the user input
-        if (!title || !text || !published) {
+        if (!text || !postId) {
           throw new Error("Missing required fields");
         }
 
         // otherwise, store hashedPassword in DB
-        const newPost = new Posts({
-          title: title,
+        const newComment = new Comments({
           text: text,
-          author: user._id,
-          published: published,
+          visitor: user._id,
+          post: postId,
         });
-        const post = await newPost.save();
+        const comment = await newComment.save();
 
         // Send a success response
-        return res.status(201).json({ message: "Post Created Successfully!" });
+        return res.status(201).json({ message: "Comment Created Successfully!" });
       } catch (err) {
         return res.status(500).json({ message: "Internal server error" });
       }
     }
   },
+  async comments_get(req, res) {
+    const commentId = req.params.id;
+    try {
+      const allComments = await Comments.find({ post: commentId })
+        .populate({
+          path: "visitor",
+          model: "Visitor",
+          select: "firstName lastName",
+        }) // Populate the 'author' field with 'name' field from the Author model
+        .exec();
+      if (allComments.length > 0) {
+        return res.json({ posts: allComments });
+      } else {
+        return res.json({ message: "No Published posts!" });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  },
 
-  async post_edit(req, res, next) {
+  async comments_edit(req, res, next) {
     const user = req.user;
     const id = req.params.id;
 
@@ -542,7 +544,7 @@ const readerController = {
       res.status(401).json({ message: error });
     }
   },
-  async post_delete(req, res, next) {
+  async comments_delete(req, res, next) {
     const user = req.user;
     const id = req.params.id;
     try {
