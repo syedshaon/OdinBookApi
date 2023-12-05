@@ -140,7 +140,13 @@ const authorController = {
 
       res.status(401).json({ message: "Unauthorized" });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -217,8 +223,16 @@ const authorController = {
         }
       });
     } catch (err) {
-      return res.status(500).json({ message: "Internal server error" });
-      // res.status(401).json({ err });
+      //return res.status(500).json({ message: "Internal server error" });
+      // res.status(401).json({ message: err });
+
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -262,7 +276,13 @@ const authorController = {
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async refresh(req, res) {
@@ -289,7 +309,13 @@ const authorController = {
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async validateLoginStatus(req, res) {
@@ -307,7 +333,13 @@ const authorController = {
       }
       return res.json({});
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async signout(req, res, next) {
@@ -329,7 +361,13 @@ const authorController = {
         return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async author_update_get(req, res, next) {
@@ -337,7 +375,13 @@ const authorController = {
       const user = req.user;
       return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -426,7 +470,13 @@ const authorController = {
           }
         });
       } catch (err) {
-        return res.status(500).json({ message: "Internal server error" });
+        let errorMessage = "Internal server error";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
+        res.status(401).json({ message: errorMessage });
       }
     }
   },
@@ -447,7 +497,13 @@ const authorController = {
         }
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async post_create(req, res, next) {
@@ -473,7 +529,13 @@ const authorController = {
         // Send a success response
         return res.status(201).json({ message: "Post Created Successfully!" });
       } catch (err) {
-        return res.status(500).json({ message: "Internal server error" });
+        let errorMessage = "Internal server error";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
+        res.status(401).json({ message: errorMessage });
       }
     }
   },
@@ -490,7 +552,13 @@ const authorController = {
         }
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async post_edit(req, res, next) {
@@ -534,7 +602,13 @@ const authorController = {
         }
       }
     } catch (error) {
-      res.status(401).json({ message: error });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async post_delete(req, res, next) {
@@ -551,14 +625,26 @@ const authorController = {
             // Send a success response
             return res.json({ message: "Post deleted successfully!" });
           } catch (err) {
-            next(err);
+            let errorMessage = "Internal server error";
+
+            if (err instanceof Error) {
+              errorMessage = err.message;
+            }
+
+            res.status(401).json({ message: errorMessage });
           }
         }
       } else {
         res.status(401).json({ message: "Post not found!" });
       }
     } catch (error) {
-      res.status(401).json({ message: error });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 };

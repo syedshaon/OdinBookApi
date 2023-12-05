@@ -120,7 +120,13 @@ const readerController = {
         return res.json({ message: "No Published posts!" });
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async post_show(req, res, next) {
@@ -139,7 +145,13 @@ const readerController = {
         return res.json({ post });
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -216,9 +228,13 @@ const readerController = {
         }
       });
     } catch (err) {
-      return res.status(500).json({ message: "Internal server error" });
-      // res.json({ err });
-      // console.log(err);
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -262,7 +278,13 @@ const readerController = {
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async refresh(req, res) {
@@ -289,7 +311,13 @@ const readerController = {
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async validateLoginStatus(req, res) {
@@ -307,7 +335,13 @@ const readerController = {
       }
       return res.json({});
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async signout(req, res, next) {
@@ -330,7 +364,13 @@ const readerController = {
         return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async reader_update_get(req, res, next) {
@@ -338,7 +378,13 @@ const readerController = {
       const user = req.user;
       return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.username });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -428,7 +474,13 @@ const readerController = {
           }
         });
       } catch (err) {
-        return res.status(500).json({ message: "Internal server error" });
+        let errorMessage = "Internal server error";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
+        res.status(401).json({ message: errorMessage });
       }
     }
   },
@@ -451,7 +503,13 @@ const readerController = {
         }
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async comments_create(req, res, next) {
@@ -476,7 +534,13 @@ const readerController = {
         // Send a success response
         return res.status(201).json({ message: "Comment Created Successfully!" });
       } catch (err) {
-        return res.status(500).json({ message: "Internal server error" });
+        let errorMessage = "Internal server error";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+
+        res.status(401).json({ message: errorMessage });
       }
     }
   },
@@ -496,7 +560,13 @@ const readerController = {
         return res.json({ message: "No Published posts!" });
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 
@@ -535,13 +605,25 @@ const readerController = {
               // Send a success response
               return res.status(201).json({ post: uPost });
             } catch (err) {
-              next(err);
+              let errorMessage = "Internal server error";
+
+              if (err instanceof Error) {
+                errorMessage = err.message;
+              }
+
+              res.status(401).json({ message: errorMessage });
             }
           }
         }
       }
     } catch (error) {
-      res.status(401).json({ message: error });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
   async comments_delete(req, res, next) {
@@ -558,14 +640,26 @@ const readerController = {
             // Send a success response
             return res.json({ message: "Post deleted successfully!" });
           } catch (err) {
-            next(err);
+            let errorMessage = "Internal server error";
+
+            if (err instanceof Error) {
+              errorMessage = err.message;
+            }
+
+            res.status(401).json({ message: errorMessage });
           }
         }
       } else {
         res.status(401).json({ message: "Post not found!" });
       }
     } catch (error) {
-      res.status(401).json({ message: error });
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
     }
   },
 };
