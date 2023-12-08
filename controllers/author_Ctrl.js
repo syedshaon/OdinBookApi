@@ -4,6 +4,7 @@ const BlackJWT = require("../models/blackjwt");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const path = require("path");
 
 // // Verify a JWT token
 const verifyToken = async (token) => {
@@ -510,10 +511,10 @@ const authorController = {
     const user = req.user;
     if (user) {
       try {
-        const { title, text, published } = req.body;
+        const { title, text, published, excerpt } = req.body;
 
         // Validate the user input
-        if (!title || !text || !published) {
+        if (!title || !text || !published || !excerpt) {
           throw new Error("Missing required fields");
         }
 
@@ -523,6 +524,8 @@ const authorController = {
           text: text,
           author: user._id,
           published: published,
+          excerpt: excerpt,
+          thumbnail: req.file.path,
         });
         const post = await newPost.save();
 
@@ -548,7 +551,7 @@ const authorController = {
       if (post) {
         if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
           // return res.json({ post: post.author, author: user._id });
-          return res.json({ title: post.title, text: post.text, published: post.published });
+          return res.json({ title: post.title, timestamp: post.timestamp, text: post.text, published: post.published, excerpt: post.excerpt, thumbnail: post.thumbnail });
         }
       }
     } catch (err) {
@@ -574,21 +577,31 @@ const authorController = {
           if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
             // return res.json({ post: post.author, author: user._id });
             try {
-              const { title, text, published } = req.body;
+              const { title, text, published, excerpt } = req.body;
 
               // Validate the user input
-              if (!title || !text || !published) {
+              if (!title || !text || !published || !excerpt) {
                 throw new Error("Missing required fields");
               }
 
               // console.log("ok");
               // otherwise, store hashedPassword in DB
-              const updatedPost = {
-                title: title,
-                text: text,
-                author: user._id,
-                published: published,
-              };
+              const updatedPost = req.file
+                ? {
+                    title: title,
+                    text: text,
+                    author: user._id,
+                    excerpt: excerpt,
+                    published: published,
+                    thumbnail: req.file.path,
+                  }
+                : {
+                    title: title,
+                    text: text,
+                    author: user._id,
+                    excerpt: excerpt,
+                    published: published,
+                  };
               await Posts.findByIdAndUpdate(id, updatedPost);
 
               const uPost = await Posts.findById(id);

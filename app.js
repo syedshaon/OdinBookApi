@@ -6,18 +6,20 @@ const cors = require("cors");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-const mongoose = require("mongoose");
 
+var indexRouter = require("./routes/reader_Route");
+var authorsRouter = require("./routes/authors_Route");
+
+var app = express();
+
+const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 const mongoDB = process.env.mongoCon;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connecion error: "));
 
-var indexRouter = require("./routes/reader_Route");
-var authorsRouter = require("./routes/authors_Route");
-
-var app = express();
+app.use("/uploads", express.static("uploads"));
 
 // Enable CORS for all routes
 // app.use(cors());
@@ -53,8 +55,10 @@ app.use((req, res, next) => {
 });
 
 // view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
+// new
+// app.set("views", path.join(__dirname, "views"));
+// app.set("view engine", "ejs");
+// new
 
 app.use(logger("dev"));
 // app.use(express.json());

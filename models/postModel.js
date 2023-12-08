@@ -16,6 +16,14 @@ const postSchema = new Schema({
     type: String,
     required: true,
   },
+  excerpt: {
+    type: String,
+    required: true,
+  },
+  thumbnail: {
+    type: String,
+    required: true,
+  },
   author: {
     type: Schema.Types.ObjectId,
     ref: "Author",
