@@ -271,7 +271,7 @@ const authorController = {
         // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
         expires: new Date(Date.now() + 60 * 60 * 24 * 10 * 1000), // Expires in 10 days
         httpsOnly: true,
-        sameSite: false,
+        sameSite: "Strict",
         secure: true,
       });
 
