@@ -267,13 +267,17 @@ const authorController = {
       const refreshtoken = await generateRefreshToken(user);
 
       // Set the JWT Refresh token in  browser cookie
-      res.cookie("refreshtoken", refreshtoken, {
-        // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
-        expires: new Date(Date.now() + 60 * 60 * 24 * 10 * 1000), // Expires in 10 days
-        httpsOnly: true,
-        sameSite: "Strict",
-        secure: true,
-      });
+      // res.cookie("refreshtoken", refreshtoken, {
+      //   // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
+      //   expires: new Date(Date.now() + 60 * 60 * 24 * 10 * 1000), // Expires in 10 days
+      //   httpsOnly: true,
+      //   sameSite: "None",
+      //   secure: true,
+      // });
+
+      // The above code is unable to set cookie on live site. I've tested different samesite attribute but result it same.
+
+      res.header("Set-Cookie", "refreshtoken=" + refreshtoken + ";Path=/;HttpOnly;Secure;SameSite=None;Expires=864000");
 
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
