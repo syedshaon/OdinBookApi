@@ -126,7 +126,7 @@ const authorController = {
     try {
       const user = req.user;
       if (user) {
-        const allPostsbyThisAuthor = await Posts.find({ author: user._id });
+        const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title timestamp  excerpt thumbnail author published");
         if (allPostsbyThisAuthor.length > 0) {
           const newUser = {
             firstName: user.firstName,
@@ -277,7 +277,12 @@ const authorController = {
 
       // The above code is unable to set cookie on live site. I've tested different samesite attribute but result it same.
 
-      res.header("Set-Cookie", "refreshtoken=" + refreshtoken + ";Path=/;HttpOnly;Secure;SameSite=None;Expires=864000");
+      // res.header("Set-Cookie", "refreshtoken=" + refreshtoken + ";Path=/;HttpOnly;Secure;SameSite=None;Expires=864000");
+      const expirationDate = new Date();
+      expirationDate.setTime(expirationDate.getTime() + 864000 * 1000); // Add milliseconds
+      const expires = expirationDate.toUTCString();
+
+      res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly; Secure; SameSite=None; Expires=${expires}`);
 
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, firstName: user.firstName });
