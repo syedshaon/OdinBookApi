@@ -482,6 +482,14 @@ const readerController = {
             };
             const author = await Visitor.findByIdAndUpdate(user._id, updatedVisitor);
 
+            const token = req.headers.authorization;
+
+            // When user updates. blacklist his previous jwt.
+            const newblacklistedJWT = new BlackJWT({
+              token: token,
+            });
+            const result = await newblacklistedJWT.save();
+
             res.clearCookie("refreshtoken");
 
             return res.status(201).json({ message: "Visitor updated successfully" });
@@ -561,7 +569,7 @@ const readerController = {
   async comments_get(req, res) {
     const commentId = req.params.id;
     try {
-      const allComments = await Comments.find({ post: commentId })
+      const allComments = await Comments.find({ _id: commentId })
         .populate({
           path: "visitor",
           model: "Visitor",
@@ -571,7 +579,7 @@ const readerController = {
       if (allComments.length > 0) {
         return res.json({ posts: allComments });
       } else {
-        return res.json({ message: "No Published posts!" });
+        return res.json({ message: "No Published comments!" });
       }
     } catch (err) {
       let errorMessage = "Internal server error";
@@ -590,34 +598,35 @@ const readerController = {
 
     try {
       if (user) {
-        const post = await Posts.findById(id);
+        const Comment = await Comments.findById(id);
+
         // const val = JSON.stringify(post.author) === JSON.stringify(user._id);
         // return res.json({ val });
-        if (post) {
-          if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+        if (Comment) {
+          if (JSON.stringify(Comment.visitor) === JSON.stringify(user._id)) {
             // return res.json({ post: post.author, author: user._id });
+            // return res.json("came to this.");
             try {
-              const { title, text, published } = req.body;
+              const { text, postId } = req.body;
 
               // Validate the user input
-              if (!title || !text || !published) {
+              if (!text || !postId) {
                 throw new Error("Missing required fields");
               }
 
               // console.log("ok");
               // otherwise, store hashedPassword in DB
-              const updatedPost = {
-                title: title,
+              const updatedComment = {
                 text: text,
-                author: user._id,
-                published: published,
+                visitor: user._id,
+                post: postId,
               };
-              await Posts.findByIdAndUpdate(id, updatedPost);
+              await Comments.findByIdAndUpdate(id, updatedComment);
 
-              const uPost = await Posts.findById(id);
+              const uComment = await Comments.findById(id);
 
               // Send a success response
-              return res.status(201).json({ post: uPost });
+              return res.status(201).json({ Comment: uComment });
             } catch (err) {
               let errorMessage = "Internal server error";
 
@@ -644,15 +653,15 @@ const readerController = {
     const user = req.user;
     const id = req.params.id;
     try {
-      const post = await Posts.findById(id);
-      if (post) {
-        if (JSON.stringify(post.author) === JSON.stringify(user._id)) {
+      const comment = await Comments.findById(id);
+      if (comment) {
+        if (JSON.stringify(comment.visitor) === JSON.stringify(user._id)) {
           // return res.json({ post: post.author, author: user._id });
           try {
-            await Posts.findByIdAndDelete(id);
+            await Comments.findByIdAndDelete(id);
 
             // Send a success response
-            return res.json({ message: "Post deleted successfully!" });
+            return res.json({ message: "Comment deleted successfully!" });
           } catch (err) {
             let errorMessage = "Internal server error";
 
@@ -664,7 +673,7 @@ const readerController = {
           }
         }
       } else {
-        res.status(401).json({ message: "Post not found!" });
+        res.status(401).json({ message: "Comment not found!" });
       }
     } catch (err) {
       let errorMessage = "Internal server error";

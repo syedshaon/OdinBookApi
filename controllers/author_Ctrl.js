@@ -475,6 +475,15 @@ const authorController = {
               password: hashedPassword,
             };
             const author = await Author.findByIdAndUpdate(user._id, updatedAuthor);
+
+            const token = req.headers.authorization;
+
+            // When user updates. blacklist his previous jwt.
+            const newblacklistedJWT = new BlackJWT({
+              token: token,
+            });
+            const result = await newblacklistedJWT.save();
+
             res.clearCookie("refreshtoken");
 
             return res.status(201).json({ message: "Author updated successfully" });
