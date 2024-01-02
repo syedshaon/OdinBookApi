@@ -44,6 +44,11 @@
 - For Readers: https://the-good-news.onrender.com/blogsAPI on render.com, http://localhost:3000/blogsAPI on development
 - For Authors: https://the-good-news.onrender.com/authorAPI" on render.com, http://localhost:3000/authorAPI on development
 
+## API Documentation
+
+- For Authors: https://documenter.getpostman.com/view/32081062/2s9YsFDZ59
+- For Readers: https://documenter.getpostman.com/view/32081062/2s9YsFDZ5C
+
 ## Live Sites
 
 - For Readers: https://the-good-news.onrender.com/
