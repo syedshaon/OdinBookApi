@@ -44,12 +44,19 @@
 - For Readers: https://the-good-news.onrender.com/blogsAPI on render.com, http://localhost:3000/blogsAPI on development
 - For Authors: https://the-good-news.onrender.com/authorAPI" on render.com, http://localhost:3000/authorAPI on development
 
-## API Documentation
-
-- For Authors: https://documenter.getpostman.com/view/32081062/2s9YsFDZ59
-- For Readers: https://documenter.getpostman.com/view/32081062/2s9YsFDZ5C
-
 ## Live Sites
 
 - For Readers: https://the-good-news.onrender.com/
 - For Authors: https://author-of-good-news.onrender.com/
+
+## Getting Started
+
+- Run "npm i" to install required packages
+- rename .env.sample to .env and make changes to the .env file as you need
+- Run "npm run serve" to start the api
+- Follow Api Documentation
+
+## API Documentation
+
+- For Authors: https://documenter.getpostman.com/view/32081062/2s9YsFDZ59
+- For Readers: https://documenter.getpostman.com/view/32081062/2s9YsFDZ5C
