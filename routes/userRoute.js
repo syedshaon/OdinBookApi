@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
-const { authorController, isAuthenticated } = require("../controllers/author_Ctrl");
+const userController = require("../controllers/userController");
+const isAuthenticated = require("../controllers/services/isAuthenticated");
 
 // RELATED TO IMAGE UPLOAD WITH MULTER START
 const path = require("path");
@@ -65,65 +66,63 @@ const errorHandler = (err, req, res, next) => {
 };
 // RELATED TO IMAGE UPLOAD WITH MULTER END
 
-// router.get("/test", isAuthenticated, authorController.test);
+// router.get("/test", isAuthenticated, userController.test);
 // ################### Sign Up #############################
 //  DONE
-router.post("/signup", authorController.signup);
+router.post("/signup", userController.signup);
+router.post("/getVerificationEmail", userController.getVerificationEmail);
+router.get("/verifyEmail", userController.verifyEmail);
+router.post("/getResetPass", userController.getResetPass);
+router.post("/resetPass", userController.resetPass);
+
+router.post("/changePass", isAuthenticated, userController.changePass);
 
 // ################### Sign In #############################
-//  DONE
-router.post("/signin", authorController.signin);
+
+router.post("/signin", userController.signin);
 
 // ################### Refresh Token #############################
-//  DONE
-router.get("/refresh", authorController.refresh);
+
+router.get("/refresh", userController.refresh);
 
 // ################### Validate login status #############################
-//  DONE
-router.post("/validateLoginStatus", authorController.validateLoginStatus);
+
+router.post("/validateLoginStatus", userController.validateLoginStatus);
 
 // ###################  Sign Out  ###############################
-//  DONE
-router.post("/signout", authorController.signout);
+
+router.post("/signout", userController.signout);
 
 // ################### update an existing author #############################
 // Route to update an existing author
-//  DONE
-router.get("/update", isAuthenticated, authorController.author_update_get);
-router.put("/update", isAuthenticated, authorController.author_update);
+
+router.get("/update", isAuthenticated, userController.author_update_get);
+router.put("/update", isAuthenticated, userController.userUpdate);
+router.put("/updateProfilePic", upload.single("file"), errorHandler, isAuthenticated, userController.updateProfilePic);
+router.put("/updateCoverPic", upload.single("file"), errorHandler, isAuthenticated, userController.updateCoverPic);
 
 // Route to delete an existing author
-//  DONE
-router.delete("/delete", isAuthenticated, authorController.author_delete);
+// Not DONE
+router.delete("/delete", isAuthenticated, userController.author_delete);
 
 // ################### Blog Posts #############################
 // Will show all published and draft posts if logged in
-//  DONE
-router.get("/posts", isAuthenticated, authorController.index);
+
+// router.get("/posts", isAuthenticated, userController.index);
 
 // ################### Single Post #############################
 // Create single post
-//  DONE
-router.post("/posts", upload.single("file"), errorHandler, isAuthenticated, authorController.post_create);
 
-// router.post("/posts", upload.single("file"), errorHandler, (req, res) => {
-//   // Access the uploaded file details via req.file
-//   //   return res.send("File uploaded!");
-//   return res.status(201).json({ message: "File uploaded!" });
-// });
+// router.post("/posts", upload.single("file"), errorHandler, isAuthenticated, userController.post_create);
 
-// router.post("/posts", upload.single("file"), (req, res) => {
-//   console.log(req.body);
-//   console.log(req.file);
-// });
 // Show single post
-//  DONE
-router.get("/posts/:id", isAuthenticated, authorController.post_show);
+
+// router.get("/posts/:id", isAuthenticated, userController.post_show);
 // Update single post
-//  DONE
-router.put("/posts/:id", upload.single("file"), errorHandler, isAuthenticated, authorController.post_edit);
+
+// router.put("/posts/:id", upload.single("file"), errorHandler, isAuthenticated, userController.post_edit);
 // Delete single post
-//  DONE
-router.delete("/posts/:id", isAuthenticated, authorController.post_delete);
+
+// router.delete("/posts/:id", isAuthenticated, userController.post_delete);
 
 module.exports = router;

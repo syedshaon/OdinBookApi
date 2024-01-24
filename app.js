@@ -7,8 +7,8 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 
-var indexRouter = require("./routes/reader_Route");
-var authorsRouter = require("./routes/authors_Route");
+// var indexRouter = require("./routes/reader_Route");
+var userRouter = require("./routes/userRoute");
 
 var app = express();
 
@@ -69,8 +69,8 @@ app.use(express.urlencoded({ limit: "2mb", extended: true, parameterLimit: 5000 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/blogsAPI", indexRouter);
-app.use("/authorAPI", authorsRouter);
+app.use("/api", userRouter);
+// app.use("/authorAPI", authorsRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

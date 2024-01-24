@@ -1,10 +1,12 @@
-const Author = require("../models/authorModel");
+const User = require("../models/userModel");
 const Posts = require("../models/postModel");
 const BlackJWT = require("../models/blackjwt");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const path = require("path");
+
+const { sendConfirmationEmail, sendResetPWEmail } = require("./services/sendMail");
 
 // // Verify a JWT token
 const verifyToken = async (token) => {
@@ -24,7 +26,7 @@ const verifyToken = async (token) => {
           const user = false;
           resolve(user);
         } else {
-          const user = await Author.findOne({ _id: decodedToken.id });
+          const user = await User.findOne({ _id: decodedToken.id });
           resolve(user);
         }
       });
@@ -50,7 +52,7 @@ const verifyRefreshToken = async (token) => {
           const user = false;
           resolve(user);
         } else {
-          const user = await Author.findOne({ _id: decodedToken.id });
+          const user = await User.findOne({ _id: decodedToken.id });
           resolve(user);
         }
       });
@@ -104,36 +106,20 @@ async function generateRefreshToken(user) {
   return jwt.sign(payload, secret, options);
 }
 
-const authorController = {
-  // async test(req, res) {
-  //   // return res.json(req.user);
-  //   const user = req.user;
-
-  //   const allPostsbyThisAuthor = await Posts.find({ author: user._id });
-  //   if (allPostsbyThisAuthor.length > 0) {
-  //     const newUser = {
-  //       firstName: user.firstName,
-  //       lastName: user.lastName,
-  //       username: user.username,
-  //     };
-  //     return res.json({ allPostsbyThisAuthor, newUser });
-  //   } else {
-  //     return res.json({ message: "You have no posts yet!" });
-  //   }
-  // },
+const userController = {
   // If loggedin then show list of blog posts of this user
   async index(req, res) {
     try {
       const user = req.user;
       if (user) {
-        const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title timestamp  excerpt thumbnail author published");
-        if (allPostsbyThisAuthor.length > 0) {
+        const allPostsbyThisUser = await Posts.find({ author: user._id }, "title timestamp  excerpt thumbnail author published");
+        if (allPostsbyThisUser.length > 0) {
           const newUser = {
             firstName: user.firstName,
             lastName: user.lastName,
             username: user.username,
           };
-          return res.json({ posts: allPostsbyThisAuthor });
+          return res.json({ posts: allPostsbyThisUser });
         } else {
           return res.json({ message: "You have no posts yet!" });
         }
@@ -154,103 +140,256 @@ const authorController = {
   // Create a new author
   async signup(req, res, next) {
     try {
-      const { firstName, lastName, email, password, rpassword } = req.body;
+      const { username, password, repeatPassword, email, firstName, lastName } = req.body;
 
-      // Validate the user input
-      if (!firstName || !lastName || !email || !password || !rpassword) {
-        throw new Error("Missing required fields");
+      // Check if required fields are provided
+      if (!username || !password || !repeatPassword || !email || !firstName || !lastName) {
+        return res.status(400).json({ error: "All fields are required." });
       }
 
       const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
       if (!email.match(regex)) {
-        throw new Error("Email address is invalid!");
+        return res.status(400).json({ error: "Email address is invalid!" });
+      }
+
+      // Check if passwords match
+      if (password !== repeatPassword) {
+        return res.status(400).json({ error: "Passwords do not match." });
       }
 
       // Validate the password
 
       if (password === email) {
-        throw new Error("Can't use the email address as password.");
+        return res.status(400).json({ error: "Can't use the email address as password." });
       }
 
       if (password.length < 8) {
-        throw new Error("Password must be at least 8 characters long");
+        return res.status(400).json({ error: "Password must be at least 8 characters long." });
       }
 
       if (!/[A-Z]/.test(password)) {
-        throw new Error("Password must contain at least one uppercase letter");
+        return res.status(400).json({ error: "Password must contain at least one uppercase letter." });
       }
 
       if (!/[a-z]/.test(password)) {
-        throw new Error("Password must contain at least one lowercase letter");
+        return res.status(400).json({ error: "Password must contain at least one lowercase letter." });
       }
 
       if (!/[0-9]/.test(password)) {
-        throw new Error("Password must contain at least one number");
+        return res.status(400).json({ error: "Password must contain at least one number." });
       }
 
-      // Ensure passwords match
-      if (password !== rpassword) {
-        throw new Error("Passwords do not match");
+      // Check if the username or email is already in use
+      const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+      if (existingUser) {
+        return res.status(400).json({ error: "Username or email is already in use." });
       }
 
-      // Check if the user already exists
-      const existingAuthor = await Author.findOne({ username: email });
-      if (existingAuthor) {
-        throw new Error("Email is already in use");
-      }
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create a new user with isActive set to false
+      const newUser = new User({
+        username,
+        password: hashedPassword,
+        email,
+        firstName,
+        lastName,
+        isActive: false,
+      });
 
       // Save the user to the database
-      // await newAuthor.save();
+      await newUser.save();
 
-      bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-        // if err, do something
-        if (err) {
-          console.log(err);
-        } else {
-          // otherwise, store hashedPassword in DB
-          const newAuthor = new Author({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            username: req.body.email,
-            password: hashedPassword,
-          });
-          const author = await newAuthor.save();
-          const message = "An author account with " + author.username + " email address created successfully!";
-          // res.json(author);
-          // Send a success response
-          res.status(201).json({ message: message });
-          // res.render("report", { title: "Author created successfully!" });
-        }
-      });
-    } catch (err) {
-      //return res.status(500).json({ message: "Internal server error" });
-      // res.status(401).json({ message: err });
+      // Generate a token for email confirmation (expires in 2 hours)
+      const token = jwt.sign({ userId: newUser._id }, process.env.JWT_CONFIRMATION, { expiresIn: "2h" });
 
-      let errorMessage = "Internal server error";
+      // Send a confirmation email with the token link
+      sendConfirmationEmail(newUser.email, token);
 
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      res.status(401).json({ message: errorMessage });
+      // Respond with a success message or user data
+      res.status(201).json({ message: "Signup successful! Check your email for confirmation." });
+    } catch (error) {
+      console.error("Error during signup:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   },
 
+  async getVerificationEmail(req, res) {
+    try {
+      const { email } = req.body;
+
+      // Check if the email is provided
+      if (!email) {
+        return res.status(400).json({ error: "Email is required." });
+      }
+
+      // Find the user by email
+      const user = await User.findOne({ email });
+
+      // Check if the user exists
+      if (!user) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      // Check if the user is already active
+      if (user.isActive) {
+        return res.status(400).json({ error: "User is already active." });
+      }
+
+      // Generate a new token for email confirmation (expires in 2 hours)
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_CONFIRMATION, { expiresIn: "2h" });
+
+      // Send a new confirmation email with the new token link
+      sendConfirmationEmail(user.email, token);
+
+      // Respond with a success message
+      res.status(200).json({ message: "Confirmation email resent. Check your email for confirmation." });
+    } catch (error) {
+      console.error("Error during resending confirmation email:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+  async verifyEmail(req, res, next) {
+    try {
+      const { token } = req.query;
+      // console.log(token);
+
+      // Verify the token
+      const decodedToken = jwt.verify(token, process.env.JWT_CONFIRMATION);
+
+      // Find the user by userId in the token
+      const user = await User.findById(decodedToken.userId);
+
+      // Check if the user exists
+      if (!user) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      // Check if the user is already active
+      if (user.isActive) {
+        return res.status(400).json({ error: "User is already active." });
+      }
+
+      // Set isActive to true
+      user.isActive = true;
+      await user.save();
+
+      res.status(200).json({ message: "You email is verified now. Please sign in with your user ID and Password." });
+
+      // Optionally, you can redirect the user to a confirmation success page
+      // res.redirect("http://your-frontend-app/confirmation-success"); // Adjust the frontend URL
+    } catch (error) {
+      // Handle token verification errors
+      console.error("Error during email verification:", error);
+      res.status(400).json({ error: "Invalid or expired token." });
+    }
+  },
+  async getResetPass(req, res, next) {
+    try {
+      const { email } = req.body;
+
+      // Check if the email is provided
+      if (!email) {
+        return res.status(400).json({ error: "Email is required." });
+      }
+
+      // Find the user by email
+      const user = await User.findOne({ email });
+
+      // Check if the user exists
+      if (!user) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      // Generate a token for password reset (expires in 1 hour)
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_RESET_PASSWORD, { expiresIn: "2h" });
+
+      // Send a reset password email with the token link
+      sendResetPWEmail(user.email, token);
+
+      // Respond with a success message
+      res.status(200).json({ message: "Reset password email sent. Check your email for instructions." });
+    } catch (error) {
+      console.error("Error during sending reset password email:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+  async resetPass(req, res, next) {
+    try {
+      const { token, newPassword, repeatPassword } = req.body;
+
+      // Check if required fields are provided
+      if (!token || !newPassword || !repeatPassword) {
+        return res.status(400).json({ error: "All fields are required." });
+      }
+
+      // Check if passwords match
+      if (newPassword !== repeatPassword) {
+        return res.status(400).json({ error: "Passwords do not match." });
+      }
+
+      // Verify the reset password token
+      const decodedToken = jwt.verify(token, process.env.JWT_RESET_PASSWORD);
+
+      // Find the user by userId in the token
+      const user = await User.findById(decodedToken.userId);
+      // Check if the user exists
+      if (!user) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      if (newPassword === user.email) {
+        return res.status(400).json({ error: "Can't use the email address as password." });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters long." });
+      }
+
+      if (!/[A-Z]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one uppercase letter." });
+      }
+
+      if (!/[a-z]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one lowercase letter." });
+      }
+
+      if (!/[0-9]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one number." });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update the user's password
+      user.password = hashedPassword;
+      await user.save();
+
+      // Respond with a success message
+      res.status(200).json({ message: "Password reset successful." });
+    } catch (error) {
+      // Handle token verification errors
+      console.error("Error during password reset:", error);
+      res.status(400).json({ error: "Invalid or expired token." });
+    }
+  },
+  async changePass(req, res, next) {},
   // Authenticate author with jwt
 
   async signin(req, res) {
     try {
       // Get the user credentials from the request body
-      const username = req.body.email;
+      const email = req.body.email;
       const password = req.body.password;
 
       // Find the user by their username
-      const user = await Author.findOne({ username });
+      const user = await User.findOne({ email });
 
       // If the user is not found, return an error
       if (!user) {
-        return res.status(404).json({ message: "Author not found" });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Verify the password
@@ -311,7 +450,7 @@ const authorController = {
 
       // If the user is not found, return an error
       if (!user) {
-        return res.status(404).json({ message: "Author not found", error: true });
+        return res.status(404).json({ message: "User not found", error: true });
       }
 
       // Generate a JWT token for the user
@@ -454,11 +593,11 @@ const authorController = {
         const targetUsername = email;
 
         // Check if the user already exists
-        const existingAuthor = await Author.findOne({
+        const existingUser = await User.findOne({
           _id: { $ne: currentUserID },
           username: targetUsername,
         });
-        if (existingAuthor) {
+        if (existingUser) {
           // throw new Error("Email is already in use");
           return res.status(422).send({ message: "Email is already in use" });
         }
@@ -468,13 +607,13 @@ const authorController = {
           if (err) {
             console.log(err);
           } else {
-            const updatedAuthor = {
+            const updatedUser = {
               firstName: req.body.firstName,
               lastName: req.body.lastName,
               username: req.body.email,
               password: hashedPassword,
             };
-            const author = await Author.findByIdAndUpdate(user._id, updatedAuthor);
+            const author = await User.findByIdAndUpdate(user._id, updatedUser);
 
             const token = req.headers.authorization;
 
@@ -486,7 +625,7 @@ const authorController = {
 
             res.clearCookie("refreshtoken");
 
-            return res.status(201).json({ message: "Author updated successfully" });
+            return res.status(201).json({ message: "User updated successfully" });
           }
         });
       } catch (err) {
@@ -506,14 +645,14 @@ const authorController = {
     try {
       const user = req.user;
       if (user) {
-        const allPostsbyThisAuthor = await Posts.find({ author: user._id }, "title text").exec();
+        const allPostsbyThisUser = await Posts.find({ author: user._id }, "title text").exec();
 
-        if (allPostsbyThisAuthor.length > 0) {
+        if (allPostsbyThisUser.length > 0) {
           res.status(401).json({ delete: false, message: "You first need to delete all your blog posts to delete your account." });
         } else {
-          await Author.findByIdAndDelete(user._id);
+          await User.findByIdAndDelete(user._id);
           res.clearCookie("refreshtoken");
-          return res.json({ delete: true, message: "Author deleted successfully!" });
+          return res.json({ delete: true, message: "User deleted successfully!" });
         }
       }
     } catch (err) {
@@ -681,4 +820,4 @@ const authorController = {
   },
 };
 
-module.exports = { authorController, isAuthenticated };
+module.exports = { userController, isAuthenticated };
