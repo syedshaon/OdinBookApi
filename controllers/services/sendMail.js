@@ -14,7 +14,7 @@ const sendConfirmationEmail = (email, token) => {
     },
   });
 
-  const confirmationLink = `${process.env.FRONT1}/verify?vtoken=${token}`; // Adjust the frontend URL
+  const confirmationLink = `${process.env.FRONT1}/verify/${token}`; // Adjust the frontend URL
   const mailOptions = {
     from: process.env.gmailId,
     to: email,
@@ -45,7 +45,7 @@ const sendResetPWEmail = (email, token) => {
     },
   });
 
-  const confirmationLink = `${process.env.FRONT1}/reset?rtoken=${token}`; // Adjust the frontend URL
+  const confirmationLink = `${process.env.FRONT1}/reset-password/${token}`; // Adjust the frontend URL
   const mailOptions = {
     from: process.env.gmailId,
     to: email,

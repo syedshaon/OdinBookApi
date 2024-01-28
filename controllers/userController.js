@@ -110,7 +110,7 @@ const userController = {
 
       // Check if the user is already active
       if (user.isActive) {
-        return res.status(400).json({ message: "User is already active." });
+        return res.status(200).json({ message: "User is already active. Please sign in with your user ID and Password." });
       }
 
       // Generate a new token for email confirmation (expires in 2 hours)
@@ -144,7 +144,7 @@ const userController = {
 
       // Check if the user is already active
       if (user.isActive) {
-        return res.status(400).json({ message: "User is already active." });
+        return res.status(200).json({ message: "User is already active. Please sign in with your user ID and Password." });
       }
 
       // Set isActive to true
@@ -243,7 +243,7 @@ const userController = {
       await user.save();
 
       // Respond with a success message
-      res.status(200).json({ message: "Password reset successful." });
+      res.status(200).json({ message: "Password Reset successful." });
     } catch (error) {
       // Handle token verification errors
       console.error("Error during password reset:", error);
