@@ -23,6 +23,10 @@ const userController = {
       }
 
       const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      const letterAndNumber = /^[a-zA-Z0-9]+$/;
+      if (!username.match(letterAndNumber)) {
+        return res.status(400).json({ message: "Username can contain letters and numbers only!" });
+      }
 
       if (!email.match(regex)) {
         return res.status(400).json({ message: "Email address is invalid!" });
@@ -251,6 +255,7 @@ const userController = {
     }
   },
   async changePass(req, res, next) {
+    console.log(req.body.currentPassword);
     const user = req.user;
     if (user) {
       try {
@@ -367,9 +372,10 @@ const userController = {
       const expires = expirationDate.toUTCString();
 
       res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly; Secure; SameSite=None; Expires=${expires}`);
+      const frontUser = { username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
 
       // Send the token to the user
-      return res.status(200).json({ token, expire: tokenExpires, firstName: user.firstName });
+      return res.status(200).json({ token, expire: tokenExpires, user: frontUser });
     } catch (error) {
       // Handle token verification errors
       console.error("Error during signing In:", error);
@@ -397,8 +403,9 @@ const userController = {
       // Generate a JWT token for the user
       const token = await generateToken(user);
       const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
+      const frontUser = { username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
       // Send the token to the user
-      return res.json({ token, expire: tokenExpires, firstName: user.firstName });
+      return res.json({ token, expire: tokenExpires, user: frontUser });
     } catch (err) {
       let errorMessage = "Internal server error";
 
@@ -419,7 +426,7 @@ const userController = {
         if (user) {
           // req.session.user = user;
 
-          return res.json({ firstName: user.firstName });
+          return res.json({ user: { username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
         }
       }
       return res.json({});
@@ -461,7 +468,7 @@ const userController = {
       res.status(401).json({ message: errorMessage });
     }
   },
-  async author_update_get(req, res, next) {
+  async user_update_get(req, res, next) {
     try {
       const user = req.user;
       return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.email, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture });
@@ -478,7 +485,7 @@ const userController = {
 
   // Update an existing author
   async userUpdate(req, res, next) {
-    console.log(req.file);
+    console.log(req.body.bio);
     // Validate the auth token.
     const user = req.user;
     if (user) {
@@ -584,7 +591,7 @@ const userController = {
     }
   },
   // Delete an existing author
-  async author_delete(req, res) {
+  async user_delete(req, res) {
     try {
       const user = req.user;
       if (user) {
@@ -598,6 +605,25 @@ const userController = {
           return res.json({ delete: true, message: "User deleted successfully!" });
         }
       }
+    } catch (err) {
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
+    }
+  },
+  async profileDetails(req, res, next) {
+    const username = req.params.uid;
+
+    try {
+      const searchedUser = await User.findOne({ username: username });
+
+      const coverPicture = searchedUser.coverPicture ? searchedUser.coverPicture.replace(/\\/g, "/") : "";
+      const profilePicture = searchedUser.profilePicture ? searchedUser.profilePicture.replace(/\\/g, "/") : "";
+      return res.status(201).json({ searchedUser: { firstName: searchedUser.firstName, lastName: searchedUser.lastName, username: searchedUser.username, bio: searchedUser.bio, profilePicture: profilePicture, coverPicture: coverPicture } });
     } catch (err) {
       let errorMessage = "Internal server error";
 

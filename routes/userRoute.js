@@ -96,14 +96,16 @@ router.post("/signout", userController.signout);
 // ################### update an existing author #############################
 // Route to update an existing author
 
-router.get("/update", isAuthenticated, userController.author_update_get);
+router.get("/update", isAuthenticated, userController.user_update_get);
 router.put("/update", isAuthenticated, userController.userUpdate);
 router.put("/updateProfilePic", upload.single("file"), errorHandler, isAuthenticated, userController.updateProfilePic);
 router.put("/updateCoverPic", upload.single("file"), errorHandler, isAuthenticated, userController.updateCoverPic);
 
+router.get("/profile-details/:uid", isAuthenticated, userController.profileDetails);
+
 // Route to delete an existing author
 // Not DONE
-router.delete("/delete", isAuthenticated, userController.author_delete);
+router.delete("/delete", isAuthenticated, userController.user_delete);
 
 // ################### Blog Posts #############################
 // Will show all published and draft posts if logged in
