@@ -1,7 +1,9 @@
+const { v4: uuidv4 } = require("uuid");
 var express = require("express");
 var router = express.Router();
 const userController = require("../controllers/userController");
 const isAuthenticated = require("../controllers/services/isAuthenticated");
+const followerController = require("../controllers/followerController");
 
 // RELATED TO IMAGE UPLOAD WITH MULTER START
 const path = require("path");
@@ -16,7 +18,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // cb(null, new Date().toISOString() + file.originalname);
-    cb(null, Date.now() + "~" + file.originalname);
+    cb(null, uuidv4() + "~" + file.originalname);
   },
 });
 
@@ -126,5 +128,14 @@ router.delete("/delete", isAuthenticated, userController.user_delete);
 // Delete single post
 
 // router.delete("/posts/:id", isAuthenticated, userController.post_delete);
+
+router.post("/follow-username/:followingUserName", isAuthenticated, followerController.follow);
+router.post("/follow-id/:followingId", isAuthenticated, followerController.followById);
+router.post("/unfollow-username/:unfollowingUsername", isAuthenticated, followerController.unfollowUsername);
+router.post("/unfollow-id/:unfollowingId", isAuthenticated, followerController.unfollowID);
+router.post("/sendFriendRequest/:friendId", isAuthenticated, followerController.sendFriendRequest);
+router.post("/acceptFriendRequest/:friendId", isAuthenticated, followerController.acceptFriendRequest);
+
+router.get("/peopleDetails", isAuthenticated, followerController.getAllUsers);
 
 module.exports = router;

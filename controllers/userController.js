@@ -4,7 +4,8 @@ const BlackJWT = require("../models/blackjwt");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const path = require("path");
+
+const fs = require("fs");
 
 const { sendConfirmationEmail, sendResetPWEmail } = require("./services/sendMail");
 const { verifyToken, verifyRefreshToken } = require("./services/verifyToken");
@@ -341,6 +342,9 @@ const userController = {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      if (!user.isActive) {
+        return res.status(404).json({ message: "Please verify your email first, to Login." });
+      }
 
       // Verify the password
       const match = await bcrypt.compare(password, user.password);
@@ -372,7 +376,7 @@ const userController = {
       const expires = expirationDate.toUTCString();
 
       res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly; Secure; SameSite=None; Expires=${expires}`);
-      const frontUser = { username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
+      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
 
       // Send the token to the user
       return res.status(200).json({ token, expire: tokenExpires, user: frontUser });
@@ -403,7 +407,7 @@ const userController = {
       // Generate a JWT token for the user
       const token = await generateToken(user);
       const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
-      const frontUser = { username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
+      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, user: frontUser });
     } catch (err) {
@@ -426,7 +430,7 @@ const userController = {
         if (user) {
           // req.session.user = user;
 
-          return res.json({ user: { username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
+          return res.json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
         }
       }
       return res.json({});
@@ -471,7 +475,7 @@ const userController = {
   async user_update_get(req, res, next) {
     try {
       const user = req.user;
-      return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, email: user.email, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture });
+      return res.status(201).json({ id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, bio: user.bio, profilePicture: user.profilePicture, coverPicture: user.coverPicture });
     } catch (err) {
       let errorMessage = "Internal server error";
 
@@ -533,7 +537,7 @@ const userController = {
         // }
         await user.save();
 
-        return res.status(201).json({ message: "User updated successfully" });
+        return res.status(201).json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
       } catch (err) {
         let errorMessage = "Internal server error";
 
@@ -548,7 +552,21 @@ const userController = {
   },
   async updateProfilePic(req, res, next) {
     const user = req.user;
+
     if (user) {
+      // Delete previous img
+
+      const filePath = user.profilePicture;
+      // console.log(filePath);
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error("Error deleting file:", unlinkErr);
+        } else {
+          console.log(`Deleted file: ${filePath}`);
+        }
+      });
+
+      // Delete Previous Img ENDS
       try {
         if (req.file.path) {
           user.profilePicture = req.file.path;
@@ -556,7 +574,7 @@ const userController = {
 
         await user.save();
 
-        return res.status(201).json({ message: "User updated successfully" });
+        return res.status(201).json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
       } catch (err) {
         let errorMessage = "Internal server error";
 
@@ -571,14 +589,26 @@ const userController = {
   async updateCoverPic(req, res, next) {
     const user = req.user;
     if (user) {
+      // Delete previous img
+
+      const filePath = user.coverPicture;
+      // console.log(filePath);
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error("Error deleting file:", unlinkErr);
+        } else {
+          console.log(`Deleted file: ${filePath}`);
+        }
+      });
+
+      // Delete Previous Img ENDS
       try {
         if (req.file.path) {
           user.coverPicture = req.file.path;
         }
 
         await user.save();
-
-        return res.status(201).json({ message: "User updated successfully" });
+        return res.status(201).json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
       } catch (err) {
         let errorMessage = "Internal server error";
 
@@ -623,7 +653,7 @@ const userController = {
 
       const coverPicture = searchedUser.coverPicture ? searchedUser.coverPicture.replace(/\\/g, "/") : "";
       const profilePicture = searchedUser.profilePicture ? searchedUser.profilePicture.replace(/\\/g, "/") : "";
-      return res.status(201).json({ searchedUser: { firstName: searchedUser.firstName, lastName: searchedUser.lastName, username: searchedUser.username, bio: searchedUser.bio, profilePicture: profilePicture, coverPicture: coverPicture } });
+      return res.status(201).json({ searchedUser: { firstName: searchedUser.firstName, lastName: searchedUser.lastName, username: searchedUser.username, bio: searchedUser.bio, profilePicture: profilePicture, coverPicture: coverPicture, followers: searchedUser.followers, friends: searchedUser.friends } });
     } catch (err) {
       let errorMessage = "Internal server error";
 
