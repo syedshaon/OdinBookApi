@@ -129,12 +129,16 @@ router.delete("/delete", isAuthenticated, userController.user_delete);
 
 // router.delete("/posts/:id", isAuthenticated, userController.post_delete);
 
-router.post("/follow-username/:followingUserName", isAuthenticated, followerController.follow);
-router.post("/follow-id/:followingId", isAuthenticated, followerController.followById);
-router.post("/unfollow-username/:unfollowingUsername", isAuthenticated, followerController.unfollowUsername);
-router.post("/unfollow-id/:unfollowingId", isAuthenticated, followerController.unfollowID);
+router.post("/follow/:followingId", isAuthenticated, followerController.follow);
+
+router.post("/unfollow/:unfollowingId", isAuthenticated, followerController.unfollow);
+
 router.post("/sendFriendRequest/:friendId", isAuthenticated, followerController.sendFriendRequest);
+
+router.post("/cancelFriendRequest/:friendId", isAuthenticated, followerController.cancelFriendRequest);
 router.post("/acceptFriendRequest/:friendId", isAuthenticated, followerController.acceptFriendRequest);
+router.post("/rejectFriendRequest/:friendId", isAuthenticated, followerController.rejectFriendRequest);
+router.post("/deleteFriend/:friendId", isAuthenticated, followerController.deleteFriend);
 
 router.get("/peopleDetails", isAuthenticated, followerController.getAllUsers);
 

@@ -23,6 +23,19 @@ const userController = {
         return res.status(400).json({ message: "All fields are required." });
       }
 
+      if (username.length > 50) {
+        return res.status(400).json({ message: "Username's max character lenth is 50." });
+      }
+      if (firstName.length > 10) {
+        return res.status(400).json({ message: "First Name's max character lenth is 10." });
+      }
+      if (lastName.length > 10) {
+        return res.status(400).json({ message: "Last Name's max character lenth is 10." });
+      }
+      if (password.length > 50) {
+        return res.status(400).json({ message: "Password's max character lenth is 50." });
+      }
+
       const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
       const letterAndNumber = /^[a-zA-Z0-9]+$/;
       if (!username.match(letterAndNumber)) {
@@ -499,6 +512,9 @@ const userController = {
         const { firstName, lastName, email, bio } = req.body;
 
         if (email) {
+          if (email.length > 50) {
+            return res.status(400).json({ message: "Email's max character lenth is 50." });
+          }
           const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
           if (!email.match(regex)) {
             // throw new Error("Email address is invalid!");
@@ -521,12 +537,21 @@ const userController = {
         }
 
         if (firstName) {
+          if (firstName.length > 10) {
+            return res.status(400).json({ message: "First Name's max character lenth is 10." });
+          }
           user.firstName = firstName;
         }
         if (lastName) {
+          if (lastName.length > 10) {
+            return res.status(400).json({ message: "Last Name's max character lenth is 10." });
+          }
           user.lastName = lastName;
         }
         if (bio) {
+          if (bio.length > 200) {
+            return res.status(400).json({ message: "Bio's max character lenth is 200." });
+          }
           user.bio = bio;
         }
         // if (req.file.path) {
@@ -558,13 +583,15 @@ const userController = {
 
       const filePath = user.profilePicture;
       // console.log(filePath);
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) {
-          console.error("Error deleting file:", unlinkErr);
-        } else {
-          console.log(`Deleted file: ${filePath}`);
-        }
-      });
+      if (filePath) {
+        fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting file:", unlinkErr);
+          } else {
+            console.log(`Deleted file: ${filePath}`);
+          }
+        });
+      }
 
       // Delete Previous Img ENDS
       try {
@@ -651,9 +678,19 @@ const userController = {
     try {
       const searchedUser = await User.findOne({ username: username });
 
+      // Fetch details of each post using post IDs
+      // const postsDetails = await Posts.find({ _id: { $in: searchedUser.posts } }).sort({ timestamp: -1 });
+
+      const postsDetails = await Posts.find({ _id: { $in: searchedUser.posts } })
+        .sort({ timestamp: -1 })
+        .populate({
+          path: "comments.provider",
+          select: "firstName lastName username profilePicture", // Select the fields you want to include
+        });
+
       const coverPicture = searchedUser.coverPicture ? searchedUser.coverPicture.replace(/\\/g, "/") : "";
       const profilePicture = searchedUser.profilePicture ? searchedUser.profilePicture.replace(/\\/g, "/") : "";
-      return res.status(201).json({ searchedUser: { firstName: searchedUser.firstName, lastName: searchedUser.lastName, username: searchedUser.username, bio: searchedUser.bio, profilePicture: profilePicture, coverPicture: coverPicture, followers: searchedUser.followers, friends: searchedUser.friends } });
+      return res.status(201).json({ searchedUser: { _id: searchedUser._id, firstName: searchedUser.firstName, lastName: searchedUser.lastName, username: searchedUser.username, bio: searchedUser.bio, profilePicture: profilePicture, coverPicture: coverPicture, followers: searchedUser.followers, friends: searchedUser.friends, posts: postsDetails } });
     } catch (err) {
       let errorMessage = "Internal server error";
 

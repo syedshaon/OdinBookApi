@@ -1,49 +1,46 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const Author = require("./userModel");
+const User = require("./userModel");
 
 const postSchema = new Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-
-    default: Date.now,
-  },
   text: {
     type: String,
-    required: true,
-  },
-  excerpt: {
-    type: String,
-    required: true,
+    required: false,
   },
   thumbnail: {
     type: String,
-    required: true,
+    required: false,
   },
   author: {
     type: Schema.Types.ObjectId,
-    ref: "Author",
+    ref: "User",
     required: true,
   },
-  published: {
-    type: String,
-    enum: ["draft", "published"],
-    required: true,
-  },
-  // Make the url field virtual
-  url: {
-    type: String,
-    virtual: true,
-    get() {
-      return `/posts/${this._id}`;
+  comments: [
+    {
+      text: String,
+      provider: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+      time: {
+        type: Date,
+        default: Date.now,
+      },
     },
+  ],
+  likes: [
+    {
+      provider: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    },
+  ],
+  timestamp: {
+    type: Date,
+    default: Date.now,
   },
 });
 
 module.exports = mongoose.model("Post", postSchema);
-
-// module.exports = Message;

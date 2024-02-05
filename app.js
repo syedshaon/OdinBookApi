@@ -9,6 +9,7 @@ var logger = require("morgan");
 
 // var indexRouter = require("./routes/reader_Route");
 var userRouter = require("./routes/userRoute");
+let postRouter = require("./routes/postRoute");
 
 var app = express();
 
@@ -20,6 +21,7 @@ const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connecion error: "));
 
 app.use("/uploads", express.static("uploads"));
+app.use("/thumbs", express.static("thumbs"));
 
 // Enable CORS for all routes
 // app.use(cors());
@@ -70,6 +72,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api", userRouter);
+app.use("/api/posts", postRouter);
 // app.use("/authorAPI", authorsRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
