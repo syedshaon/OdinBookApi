@@ -29,7 +29,7 @@ function createRandomUser() {
 const seedDatabase = async () => {
   try {
     // Generate and save 20 fake users
-    const fakeUsers = Array.from({ length: 10 }, () => createRandomUser());
+    const fakeUsers = Array.from({ length: 50 }, () => createRandomUser());
     await User.insertMany(fakeUsers);
 
     console.log("Database seeded successfully.");
