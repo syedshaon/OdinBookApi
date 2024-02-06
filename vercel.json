@@ -9,23 +9,13 @@
   "routes": [
     {
       "src": "/(.*)",
-
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Credentials": "true"
+      },
       "dest": "./",
-      "continue": true,
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        }
-      ]
+      "continue": true
     }
   ]
 }
