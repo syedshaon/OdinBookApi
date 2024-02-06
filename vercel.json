@@ -12,7 +12,8 @@
       "dest": "/",
       "headers": {
         "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
-        "Access-Control-Allow-Credentials": "true"
+        "Access-Control-Allow-Credentials": "true",
+        "preflightContinue": "true"
       }
     }
   ]
