@@ -56,6 +56,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.options("*", cors());
+
 // view engine setup
 // new
 // app.set("views", path.join(__dirname, "views"));
