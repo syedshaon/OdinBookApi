@@ -108,7 +108,7 @@ router.get("/profile-details/:uid", isAuthenticated, userController.profileDetai
 
 // Route to delete an existing author
 // Not DONE
-router.delete("/delete", isAuthenticated, userController.user_delete);
+// router.delete("/delete", isAuthenticated, userController.user_delete);
 
 // ################### Blog Posts #############################
 // Will show all published and draft posts if logged in
