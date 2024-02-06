@@ -35,6 +35,14 @@ app.use(
   })
 );
 
+app.options("/*", (_, res) => {
+  res.sendStatus(200);
+});
+// app.options("*", cors());
+// app.options("*", function (req, res) {
+//   res.sendStatus(200);
+// });
+
 // app.use(
 //   cors({
 //     origin: function (origin, callback) {
@@ -56,13 +64,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options("/*", (_, res) => {
-  res.sendStatus(200);
-});
-// app.options("*", cors());
-// app.options("*", function (req, res) {
-//   res.sendStatus(200);
-// });
 // view engine setup
 // new
 // app.set("views", path.join(__dirname, "views"));
