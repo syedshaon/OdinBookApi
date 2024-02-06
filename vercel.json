@@ -12,9 +12,9 @@
       "headers": {
         "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
         "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Request-Method": "*",
-        "Access-Control-Request-Headers": "*",
-        "Origin": "*",
+        "Access-Control-Request-Method": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+        "Access-Control-Request-Headers": "origin, x-requested-with",
+        "Origin": "https://odin-book-front.vercel.app",
         "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
         "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
         "Content-Type": "application/json",

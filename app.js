@@ -34,6 +34,7 @@ app.use(
     credentials: true,
     preflightContinue: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    optionsSuccessStatus: 204,
   })
 );
 
