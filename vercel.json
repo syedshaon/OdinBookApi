@@ -19,7 +19,7 @@
       "continue": true
     },
     {
-      "src": "/api/signin",
+      "src": "/api/(.*)",
       "methods": ["POST"],
       "dest": "app.js"
     }
