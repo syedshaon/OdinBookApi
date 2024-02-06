@@ -6,6 +6,7 @@
       "use": "@vercel/node"
     }
   ],
+  "no-cors": "true",
   "routes": [
     {
       "src": "/(.*)",
