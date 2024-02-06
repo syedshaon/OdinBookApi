@@ -12,7 +12,8 @@
       "methods": ["GET", "POST", "OPTIONS"],
       "headers": {
         "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
-        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+        "Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT",
+        "Access-Control-Allow-Headers": "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers",
         "Access-Control-Allow-Credentials": "true"
       },
       "dest": "app.js",
