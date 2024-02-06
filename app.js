@@ -28,15 +28,15 @@ app.use("/thumbs", express.static("thumbs"));
 const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
 
 // Use CORS middleware with the specific origin
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    preflightContinue: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    optionsSuccessStatus: 204,
-  })
-);
+// app.use(
+//   cors({
+//     origin: true,
+//     credentials: true,
+//     preflightContinue: true,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     optionsSuccessStatus: 204,
+//   })
+// );
 
 // app.options("/*", (_, res) => {
 //   res.sendStatus(200);
@@ -46,19 +46,19 @@ app.use(
 //   res.sendStatus(200);
 // });
 
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       // Check if the origin is in the allowed list or if it's not defined (e.g., a same-origin request)
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Check if the origin is in the allowed list or if it's not defined (e.g., a same-origin request)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // Additional headers to set for cookies
 app.use((req, res, next) => {
