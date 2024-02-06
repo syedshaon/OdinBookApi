@@ -8,13 +8,20 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/",
+      "src": ".*",
+      "methods": ["GET", "POST", "OPTIONS"],
       "headers": {
         "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
-        "Access-Control-Allow-Credentials": "true",
-        "preflightContinue": "true"
-      }
+        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "dest": "app.js",
+      "continue": true
+    },
+    {
+      "src": "/api/signin",
+      "methods": ["POST"],
+      "dest": "app.js"
     }
   ]
 }
