@@ -22,7 +22,7 @@
     {
       "src": "/api/(.*)",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      "dest": "index.js"
+      "dest": "app.js"
     }
   ]
 }
