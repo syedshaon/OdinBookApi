@@ -12,6 +12,9 @@ const { verifyToken, verifyRefreshToken } = require("./services/verifyToken");
 const { generateToken, generateRefreshToken } = require("./services/generateToken");
 
 const userController = {
+  async test(req, res, next) {
+    res.status(201).json({ message: "Test Controller success!" });
+  },
   // Create a new author
   async signup(req, res, next) {
     console.log(req.body);

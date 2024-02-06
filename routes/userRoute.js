@@ -71,6 +71,7 @@ const errorHandler = (err, req, res, next) => {
 // router.get("/test", isAuthenticated, userController.test);
 // ################### Sign Up #############################
 //  DONE
+router.get("/test", userController.test);
 router.post("/signup", userController.signup);
 router.post("/getVerificationEmail", userController.getVerificationEmail);
 router.get("/verifyEmail", userController.verifyEmail);
