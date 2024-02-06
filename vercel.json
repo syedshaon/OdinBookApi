@@ -9,10 +9,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "headers": {
-        "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
-        "Access-Control-Allow-Credentials": "true"
-      },
+
       "dest": "/",
       "methods": ["get", "post", "put", "patch", "options", "delete"]
     }
