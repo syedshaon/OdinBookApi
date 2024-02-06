@@ -11,15 +11,7 @@
       "src": "/(.*)",
       "headers": {
         "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Request-Method": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-        "Access-Control-Request-Headers": "origin, x-requested-with",
-        "Origin": "https://odin-book-front.vercel.app",
-        "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
-        "Content-Type": "application/json",
-        "Access-Control-Expose-Headers": "Content-Length, X-JSON",
-        "Access-Control-Max-Age": "10000"
+        "Access-Control-Allow-Credentials": "true"
       },
       "dest": "/",
       "methods": ["get", "post", "put", "patch", "options", "delete"]
