@@ -21,7 +21,8 @@
         "Access-Control-Expose-Headers": "Content-Length, X-JSON",
         "Access-Control-Max-Age": "10000"
       },
-      "dest": "/"
+      "dest": "/",
+      "methods": ["get", "post", "put", "patch", "options", "delete"]
     }
   ]
 }
