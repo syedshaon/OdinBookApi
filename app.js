@@ -35,10 +35,10 @@ app.use(
   })
 );
 
-app.options("/*", (_, res) => {
-  res.sendStatus(200);
-});
-// app.options("*", cors());
+// app.options("/*", (_, res) => {
+//   res.sendStatus(200);
+// });
+app.options("*", cors());
 // app.options("*", function (req, res) {
 //   res.sendStatus(200);
 // });
