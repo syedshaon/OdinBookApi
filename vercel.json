@@ -8,7 +8,7 @@
   ],
   "routes": [
     {
-      "src": ".*",
+      "src": "/api/(.*)",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       "headers": {
         "Access-Control-Allow-Origin": "https://odin-book-front.vercel.app",
@@ -20,7 +20,7 @@
       "continue": true
     },
     {
-      "src": ".*",
+      "src": "/api/(.*)",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       "dest": "app.js"
     }
