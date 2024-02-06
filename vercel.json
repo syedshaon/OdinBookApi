@@ -20,7 +20,7 @@
     },
     {
       "src": "/api/(.*)",
-      "methods": ["POST"],
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       "dest": "app.js"
     }
   ]
