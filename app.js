@@ -30,7 +30,7 @@ const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
 // Use CORS middleware with the specific origin
 app.use(
   cors({
-    origin: process.env.FRONT1,
+    origin: true,
     credentials: true,
   })
 );
@@ -39,9 +39,9 @@ app.use(
 //   res.sendStatus(200);
 // });
 // app.options("*", cors());
-app.options("*", function (req, res) {
-  res.sendStatus(200);
-});
+// app.options("*", function (req, res) {
+//   res.sendStatus(200);
+// });
 
 // app.use(
 //   cors({
