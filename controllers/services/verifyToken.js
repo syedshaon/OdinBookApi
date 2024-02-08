@@ -1,6 +1,8 @@
 const User = require("../../models/userModel");
 const BlackJWT = require("../../models/blackjwt");
 const jwt = require("jsonwebtoken");
+const passport = require("passport");
+const requireJwtAuth = passport.authenticate("jwt", { session: false });
 
 // // Verify a JWT token
 const verifyToken = async (token) => {

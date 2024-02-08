@@ -1,17 +1,39 @@
 require("dotenv").config();
 
-var createError = require("http-errors");
-var express = require("express");
+const createError = require("http-errors");
+const express = require("express");
 const cors = require("cors");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+const passport = require("./controllers/services/passport");
 
 // var indexRouter = require("./routes/reader_Route");
-var userRouter = require("./routes/userRoute");
-let postRouter = require("./routes/postRoute");
+const userRouter = require("./routes/userRoute");
+const postRouter = require("./routes/postRoute");
+const authRouter = require("./routes/auth");
+const session = require("express-session");
 
-var app = express();
+const app = express();
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true },
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+// Passport session setup.
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
 
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
@@ -19,6 +41,8 @@ const mongoDB = process.env.mongoCon;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connecion error: "));
+
+// Initialize Passport
 
 app.use("/uploads", express.static("uploads"));
 app.use("/thumbs", express.static("thumbs"));
@@ -84,6 +108,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api", userRouter);
 app.use("/api/posts", postRouter);
+app.use("/auth", authRouter);
 // app.use("/authorAPI", authorsRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

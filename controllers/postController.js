@@ -1,15 +1,4 @@
-const User = require("../models/userModel");
 const Post = require("../models/postModel");
-const BlackJWT = require("../models/blackjwt");
-
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-
-const fs = require("fs");
-
-const { sendConfirmationEmail, sendResetPWEmail } = require("./services/sendMail");
-const { verifyToken, verifyRefreshToken } = require("./services/verifyToken");
-const { generateToken, generateRefreshToken } = require("./services/generateToken");
 
 const postController = {
   // Update an existing author
@@ -140,6 +129,8 @@ const postController = {
     }
   },
   async followedUsersPosts(req, res, next) {
+    const filterdate = req.body.filterdate;
+    console.log(filterdate);
     try {
       const currentUser = req.user;
       const followingIds = currentUser.following.map((user) => user._id);
@@ -162,6 +153,62 @@ const postController = {
         });
 
       res.json({ posts });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+  async followedUsersPostsAfterDate(req, res, next) {
+    try {
+      const currentUser = req.user;
+      const followingIds = currentUser.following.map((user) => user._id);
+      const filterdate = req.body.filterdate;
+      console.log(filterdate);
+      // Get posts from users in the following list
+      if (filterdate) {
+        const posts = await Post.find({
+          author: { $in: followingIds },
+          timestamp: { $gt: new Date(filterdate) }, // Filter posts created after the specified timestamp
+        })
+          .sort({ timestamp: -1 })
+          .populate({
+            path: "author",
+            select: "username firstName lastName profilePicture",
+          })
+          .populate({
+            path: "comments",
+            populate: {
+              path: "provider",
+              select: "username firstName lastName profilePicture",
+            },
+          })
+          .populate({
+            path: "likes.provider",
+            select: "username firstName lastName profilePicture",
+          });
+
+        res.json({ posts });
+      } else {
+        const posts = await Post.find({ author: { $in: followingIds } })
+          .sort({ timestamp: -1 })
+          .populate({
+            path: "author",
+            select: "username firstName lastName profilePicture",
+          })
+          .populate({
+            path: "comments",
+            populate: {
+              path: "provider",
+              select: "username firstName lastName profilePicture",
+            },
+          })
+          .populate({
+            path: "likes.provider",
+            select: "username firstName lastName profilePicture",
+          });
+
+        res.json({ posts });
+      }
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });

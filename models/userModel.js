@@ -8,6 +8,13 @@ const userSchema = new Schema({
     required: true,
     unique: true,
   },
+  provider: {
+    type: String,
+  },
+  providerId: {
+    type: String,
+    unique: true,
+  },
   password: {
     type: String,
     required: true,
