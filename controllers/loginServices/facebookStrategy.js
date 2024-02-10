@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 
-import User from "../../models/userModel";
+import User from "../models/User";
 
 const serverUrl = process.env.NODE_ENV === "production" ? process.env.SERVER_URL_PROD : process.env.SERVER_URL_DEV;
 
@@ -14,7 +14,7 @@ const facebookLogin = new FacebookStrategy(
     profileFields: ["id", "email", "gender", "profileUrl", "displayName", "locale", "name", "timezone", "updated_time", "verified", "picture.type(large)"],
   },
   async (accessToken, refreshToken, profile, done) => {
-    // console.log(profile);
+    console.log(profile);
     try {
       const oldUser = await User.findOne({ email: profile.emails[0].value });
 
@@ -43,4 +43,4 @@ const facebookLogin = new FacebookStrategy(
   }
 );
 
-passport.use(facebookLogin);
+// passport.use(facebookLogin);
