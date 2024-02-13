@@ -2,7 +2,8 @@ const ExtractJwt = require("passport-jwt").ExtractJwt;
 const BlackJWT = require("../../models/blackjwt");
 
 const isTokenBlacklisted = async (req, res, next) => {
-  const token = ExtractJwt.fromAuthHeaderAsBearerToken();
+  const token = ExtractJwt.fromHeader("x-auth-token");
+
   const isBlacklisted = await BlackJWT.findOne({ token });
 
   // Check if the token is blacklisted (you need to implement this function)

@@ -417,6 +417,7 @@ const userController = {
     }
   },
   async validateLoginStatus(req, res) {
+    console.log("came for validation.");
     try {
       const user = req.user;
       if (user) {

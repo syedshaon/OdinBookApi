@@ -12,6 +12,7 @@ const passport = require("./controllers/services/passport");
 const userRouter = require("./routes/userRoute");
 const postRouter = require("./routes/postRoute");
 const authRouter = require("./routes/auth");
+const msgRouter = require("./routes/msgRoute");
 const session = require("express-session");
 
 const app = express();
@@ -109,6 +110,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api", userRouter);
 app.use("/api/posts", postRouter);
 app.use("/auth", authRouter);
+app.use("/msg", msgRouter);
 // app.use("/authorAPI", authorsRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

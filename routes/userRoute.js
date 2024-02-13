@@ -149,6 +149,6 @@ router.post("/acceptFriendRequest/:friendId", isTokenBlacklisted, requireJwtAuth
 router.post("/rejectFriendRequest/:friendId", isTokenBlacklisted, requireJwtAuth, followerController.rejectFriendRequest);
 router.post("/deleteFriend/:friendId", isTokenBlacklisted, requireJwtAuth, followerController.deleteFriend);
 
-router.get("/peopleDetails", isTokenBlacklisted, requireJwtAuth, followerController.getAllUsers);
+router.get("/getAllUsers", isTokenBlacklisted, requireJwtAuth, followerController.getAllUsers);
 
 module.exports = router;

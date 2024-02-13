@@ -130,11 +130,14 @@ const postController = {
   },
   async followedUsersPosts(req, res, next) {
     const filterdate = req.body.filterdate;
-    console.log(filterdate);
+    // console.log(filterdate);
     try {
       const currentUser = req.user;
       const followingIds = currentUser.following.map((user) => user._id);
+      // console.log(followingIds);
       // Get posts from users in the following list
+      followingIds.push(currentUser._id);
+      // console.log(followingIds);
       const posts = await Post.find({ author: { $in: followingIds } })
         .populate({
           path: "author",
@@ -162,8 +165,13 @@ const postController = {
     try {
       const currentUser = req.user;
       const followingIds = currentUser.following.map((user) => user._id);
+      // console.log(followingIds);
+      // Get posts from users in the following list
+      followingIds.push(currentUser._id);
+      // console.log(followingIds);
+
       const filterdate = req.body.filterdate;
-      console.log(filterdate);
+      // console.log(filterdate);
       // Get posts from users in the following list
       if (filterdate) {
         const posts = await Post.find({

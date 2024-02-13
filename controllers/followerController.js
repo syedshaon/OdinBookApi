@@ -201,11 +201,14 @@ const followerController = {
   },
   async getAllUsers(req, res, next) {
     try {
-      // Exclude the requesting user by their _id
-      const excludeUserId = req.user._id;
+      // // Exclude the requesting user by their _id
+      const user = req.user;
+
+      // // Find all users except the requesting user
+      // const users = await User.find({ _id: { $ne: excludeUserId } }).select("_id firstName lastName username profilePicture coverPicture followers friends pendingFriends");
 
       // Find all users except the requesting user
-      const users = await User.find({ _id: { $ne: excludeUserId } }).select("_id firstName lastName username profilePicture coverPicture followers friends pendingFriends");
+      const users = await User.find().select("_id firstName lastName username profilePicture coverPicture followers friends pendingFriends");
 
       res.status(200).json(users);
     } catch (error) {
