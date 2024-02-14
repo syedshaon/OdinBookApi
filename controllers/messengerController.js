@@ -45,9 +45,10 @@ const messengerController = {
     }
   },
   async getAllConversations(req, res, next) {
+    // console.log("came this far");
     try {
       const userId = req.user._id;
-      //   console.log(userId);
+      // console.log(userId);
 
       // Find all conversations where the user is a participant, sorted by modifiedAt in descending order
       const conversations = await Conversation.find({
@@ -61,6 +62,7 @@ const messengerController = {
         return res.status(404).json({ message: "Conversation not found" });
       }
 
+      // console.log(conversations);
       // Extract and return the messages
       //   const messages = conversation.messages;
 

@@ -22,6 +22,7 @@ app.set("port", port);
  */
 
 var server = http.createServer(app);
+server.maxHeadersCount = 0; // Set the desired max header size
 
 // Set up CORS options
 const corsOptions = {
@@ -65,10 +66,10 @@ io.on("connection", async (socket) => {
   socket.on("image", async (message) => {
     // Save the image to a file or process it as needed
     // const base64Data = message.text.file.buffer.toString("base64");
-    const base64Data = message.text.replace(/^data:image\/png;base64,/, ""); //
+    // const base64Data = message.text.replace(/^data:image\/png;base64,/, ""); //
     // fs.writeFileSync("image.png", base64Data, "base64");
 
-    const conversation = await messengerController.createMessage(sender, base64Data, message.recievers, false, message.conId, "image");
+    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, false, message.conId, "image");
     const recievers = [...message.recievers, sender];
     recievers.forEach((recipient) => {
       io.to(getUserIdSocketId(recipient)).emit("receiveMessage", { conversation });
@@ -80,10 +81,10 @@ io.on("connection", async (socket) => {
   socket.on("groupImage", async (message) => {
     // Save the image to a file or process it as needed
     // const base64Data = message.text.file.buffer.toString("base64");
-    const base64Data = message.text.replace(/^data:image\/png;base64,/, ""); //
+    // const base64Data = message.text.replace(/^data:image\/png;base64,/, ""); //
     // fs.writeFileSync("image.png", base64Data, "base64");
 
-    const conversation = await messengerController.createMessage(sender, base64Data, message.recievers, true, message.conId, "image");
+    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, true, message.conId, "image");
     const recievers = [...message.recievers, sender];
     recievers.forEach((recipient) => {
       io.to(getUserIdSocketId(recipient)).emit("receiveGroupMessage", { conversation });

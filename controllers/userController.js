@@ -8,9 +8,9 @@ const passport = require("passport");
 
 const fs = require("fs");
 
-const { sendConfirmationEmail, sendResetPWEmail } = require("./services/sendMail");
-const { verifyRefreshToken, verifyToken } = require("./services/verifyToken");
-const { generateToken, generateRefreshToken } = require("./services/generateToken");
+const { sendConfirmationEmail, sendResetPWEmail } = require("./middleWare/sendMail");
+const { verifyRefreshToken, verifyToken } = require("./middleWare/verifyToken");
+const { generateToken, generateRefreshToken } = require("./middleWare/generateToken");
 
 const userController = {
   async test(req, res, next) {
@@ -417,7 +417,9 @@ const userController = {
     }
   },
   async validateLoginStatus(req, res) {
-    console.log("came for validation.");
+    // console.log(req);
+    // console.log(req.authorization);
+    // console.log("came for validation.");
     try {
       const user = req.user;
       if (user) {

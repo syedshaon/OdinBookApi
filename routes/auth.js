@@ -1,10 +1,10 @@
 var express = require("express");
 var router = express.Router();
 const jwt = require("jsonwebtoken");
-const passport = require("../controllers/services/passport");
+const passport = require("../controllers/middleWare/passport");
 
-const googleAuth = require("../controllers/services/googleAuth");
-const facebookAuth = require("../controllers/services/facebookAuth");
+const googleAuth = require("../controllers/middleWare/googleAuth");
+const facebookAuth = require("../controllers/middleWare/facebookAuth");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

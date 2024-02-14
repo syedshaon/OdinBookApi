@@ -6,7 +6,7 @@ const passport = require("passport");
 const messengerController = require("../controllers/messengerController");
 const requireJwtAuth = passport.authenticate("jwt", { session: false });
 
-const isTokenBlacklisted = require("../controllers/services/blackListCheck");
+const isTokenBlacklisted = require("../controllers/middleWare/blackListCheck");
 
 // ################### Single Post #############################
 // Create single post

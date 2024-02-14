@@ -9,7 +9,7 @@ const postController = require("../controllers/postController");
 const passport = require("passport");
 const requireJwtAuth = passport.authenticate("jwt", { session: false });
 
-const isTokenBlacklisted = require("../controllers/services/blackListCheck");
+const isTokenBlacklisted = require("../controllers/middleWare/blackListCheck");
 // RELATED TO IMAGE UPLOAD WITH MULTER START
 const path = require("path");
 
@@ -77,7 +77,7 @@ const errorHandler = (err, req, res, next) => {
 // ################### Single Post #############################
 // Create single post
 
-router.post("/create", upload.single("thumbnail"), errorHandler, isTokenBlacklisted, requireJwtAuth, postController.post_create);
+router.post("/create", isTokenBlacklisted, requireJwtAuth, postController.post_create);
 router.post("/addComment/:postId", isTokenBlacklisted, requireJwtAuth, postController.addComment);
 router.post("/toggleLike/:postId", isTokenBlacklisted, requireJwtAuth, postController.toggleLike);
 router.post("/followedUsersPosts", isTokenBlacklisted, requireJwtAuth, postController.followedUsersPostsAfterDate);

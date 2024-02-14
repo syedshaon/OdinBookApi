@@ -6,9 +6,8 @@ const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const passport = require("./controllers/services/passport");
+const passport = require("./controllers/middleWare/passport");
 
-// var indexRouter = require("./routes/reader_Route");
 const userRouter = require("./routes/userRoute");
 const postRouter = require("./routes/postRoute");
 const authRouter = require("./routes/auth");
@@ -16,6 +15,14 @@ const msgRouter = require("./routes/msgRoute");
 const session = require("express-session");
 
 const app = express();
+const ImageKit = require("imagekit");
+
+const imagekit = new ImageKit({
+  urlEndpoint: process.env.imagekit_urlEndpoint,
+  publicKey: process.env.imagekit_publicKey,
+  privateKey: process.env.imagekit_Private_Key,
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -111,6 +118,10 @@ app.use("/api", userRouter);
 app.use("/api/posts", postRouter);
 app.use("/auth", authRouter);
 app.use("/msg", msgRouter);
+app.get("/imagekit_auth", function (req, res) {
+  var result = imagekit.getAuthenticationParameters();
+  res.send(result);
+});
 // app.use("/authorAPI", authorsRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

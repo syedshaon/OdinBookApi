@@ -4,12 +4,12 @@ var router = express.Router();
 const userController = require("../controllers/userController");
 
 const followerController = require("../controllers/followerController");
-const signin = require("../controllers/services/signin");
+const signin = require("../controllers/middleWare/signin");
 
 const passport = require("passport");
 const requireJwtAuth = passport.authenticate("jwt", { session: false });
 
-const isTokenBlacklisted = require("../controllers/services/blackListCheck");
+const isTokenBlacklisted = require("../controllers/middleWare/blackListCheck");
 
 // RELATED TO IMAGE UPLOAD WITH MULTER START
 const path = require("path");
@@ -98,7 +98,7 @@ router.get("/loadme", userController.loadme);
 
 // ################### Validate login status #############################
 
-router.post("/validateLoginStatus", isTokenBlacklisted, requireJwtAuth, userController.validateLoginStatus);
+router.get("/validateLoginStatus", isTokenBlacklisted, requireJwtAuth, userController.validateLoginStatus);
 
 // ###################  Sign Out  ###############################
 
@@ -113,30 +113,6 @@ router.put("/updateProfilePic", upload.single("file"), errorHandler, isTokenBlac
 router.put("/updateCoverPic", upload.single("file"), errorHandler, isTokenBlacklisted, requireJwtAuth, userController.updateCoverPic);
 
 router.get("/profile-details/:uid", isTokenBlacklisted, requireJwtAuth, userController.profileDetails);
-
-// Route to delete an existing author
-// Not DONE
-// router.delete("/delete", isTokenBlacklisted, requireJwtAuth, userController.user_delete);
-
-// ################### Blog Posts #############################
-// Will show all published and draft posts if logged in
-
-// router.get("/posts", isTokenBlacklisted, requireJwtAuth, userController.index);
-
-// ################### Single Post #############################
-// Create single post
-
-// router.post("/posts", upload.single("file"), errorHandler, isTokenBlacklisted, requireJwtAuth, userController.post_create);
-
-// Show single post
-
-// router.get("/posts/:id", isTokenBlacklisted, requireJwtAuth, userController.post_show);
-// Update single post
-
-// router.put("/posts/:id", upload.single("file"), errorHandler, isTokenBlacklisted, requireJwtAuth, userController.post_edit);
-// Delete single post
-
-// router.delete("/posts/:id", isTokenBlacklisted, requireJwtAuth, userController.post_delete);
 
 router.post("/follow/:followingId", isTokenBlacklisted, requireJwtAuth, followerController.follow);
 
