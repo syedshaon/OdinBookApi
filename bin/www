@@ -25,13 +25,27 @@ app.set("port", port);
 var server = http.createServer(app);
 server.maxHeadersCount = 0; // Set the desired max header size
 
-// Set up CORS options
+const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
+
 const corsOptions = {
-  origin: process.env.FRONT1, // Adjust the allowed origin as needed
-  methods: ["GET", "POST"],
+  origin: function (origin, callback) {
+    // Check if the origin is in the allowed list or if it's not defined (e.g., a same-origin request)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
-  optionsSuccessStatus: 204,
 };
+
+// Set up CORS options
+// const corsOptions = {
+//   origin: process.env.FRONT1, // Adjust the allowed origin as needed
+//   methods: ["GET", "POST"],
+//   credentials: true,
+//   optionsSuccessStatus: 204,
+// };
 
 const io = socketIO(server, {
   cors: corsOptions, // Use the same CORS options for Socket.IO
