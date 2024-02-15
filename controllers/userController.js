@@ -274,26 +274,23 @@ const userController = {
     }
   },
   async changePass(req, res, next) {
-    console.log(req.body.currentPassword);
     const user = req.user;
+    if (user.email === "Blake_Brekke91@gmail.com" || user.email === "Khalil_Stark16@gmail.com") {
+      res.status(401).json({ message: "Can't Change Password of the Guest Account." });
+      return;
+    }
     if (user) {
       try {
-        const { currentPassword, newPassword, repeatPassword } = req.body;
+        const { newPassword, repeatPassword } = req.body;
 
         // Check if required fields are provided
-        if (!currentPassword || !newPassword || !repeatPassword) {
+        if (!newPassword || !repeatPassword) {
           return res.status(400).json({ message: "All fields are required." });
         }
 
         // Check if passwords match
         if (newPassword !== repeatPassword) {
           return res.status(400).json({ message: "Passwords do not match." });
-        }
-
-        // Check if the current password is correct
-        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-        if (!isPasswordValid) {
-          return res.status(401).json({ message: "Current password is incorrect." });
         }
 
         if (newPassword === user.email) {

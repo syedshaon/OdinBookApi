@@ -30,10 +30,13 @@ passport.use(
       // The 'profile' object contains information about the authenticated user.
       // You can use this information to create or update a user in your database.
 
+      const userName = profile.displayName.replace(/\s/g, "") + profile.id;
       // Example: Create or update a user in the database
       const user = {
-        providerId: profile.id,
-        username: profile.displayName,
+        username: userName,
+        firstName: profile.name.givenName,
+        lastName: profile.name.familyName,
+        profilePicture: profile.photos[0].value,
         email: profile.emails[0].value,
       };
 
@@ -54,13 +57,13 @@ passport.use(
       profileFields: ["id", "emails", "name"], // emails needs to be listed here
     },
     (accessToken, refreshToken, profile, done) => {
-      // console.log("found user:", profile);
+      console.log("found user:", profile);
       // The 'profile' object contains information about the authenticated user.
       // You can use this information to create or update a user in your database.
-
+      const userName = profile.name.givenName + profile.name.familyName + profile.id;
       // Example: Create or update a user in the database
       const user = {
-        providerId: profile.id,
+        username: userName,
         email: profile.emails[0].value,
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,

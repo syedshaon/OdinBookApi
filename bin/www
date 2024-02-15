@@ -9,6 +9,7 @@ var debug = require("debug")("blog-api:server");
 var http = require("http");
 const socketIO = require("socket.io");
 const messengerController = require("../controllers/messengerController");
+const { verifyToken } = require("../controllers/middleWare/verifyToken");
 
 /**
  * Get port from environment and store in Express.
@@ -43,8 +44,35 @@ function getUserIdSocketId(userId) {
 }
 // Socket.IO logic
 io.on("connection", async (socket) => {
-  const sender = socket.handshake.query.sender;
-  socketToUserMap[sender] = socket.id;
+  const getSenderProfileId = async (token) => {
+    try {
+      const senderProfile = await verifyToken(token);
+      return senderProfile ? senderProfile._id : null;
+    } catch (error) {
+      console.error("Error verifying token:", error);
+      return null;
+    }
+  };
+
+  // Usage:
+  const sender = await getSenderProfileId(socket.handshake.query.token);
+
+  // Perform authentication and call next() if successful
+  if (!sender) {
+    return next(new Error("Authentication failed"));
+  }
+
+  // Otherwise, disconnect the socket
+
+  // const senderProfile = await verifyToken(socket.handshake.query.token)=>((profile)=>profile._id);
+  // const sender = senderProfile._id;
+  // console.log(sender);
+  // const sender = socket.handshake.query.sender;
+  socketToUserMap[sender._id] = socket.id;
+
+  let userIdsArray = Object.keys(socketToUserMap);
+  io.emit("activeUsers", { userIdsArray });
+
   socket.on("sendMessage", async (message) => {
     const socketId = socketToUserMap[sender];
     const conversation = await messengerController.createMessage(sender, message.text, message.recievers, false, message.conId);
@@ -96,6 +124,8 @@ io.on("connection", async (socket) => {
   // Handle disconnection
   socket.on("disconnect", () => {
     delete socketToUserMap[socket.id];
+    let userIdsArray = Object.keys(socketToUserMap);
+    io.emit("activeUsers", { userIdsArray });
   });
 });
 

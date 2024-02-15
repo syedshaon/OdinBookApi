@@ -28,12 +28,19 @@ const facebookAuth = {
   },
 
   validateUser: async (oauthUser) => {
-    console.log(oauthUser);
+    // console.log(oauthUser);
     const user = await User.findOne({ email: oauthUser.email });
     if (user) {
       return user;
     } else {
-      const user = false;
+      const user = new User({
+        username: oauthUser.username,
+        firstName: oauthUser.firstName,
+        lastName: oauthUser.lastName,
+        email: oauthUser.email,
+        isActive: true, //optional
+      });
+      await user.save();
       return user;
     }
   },
