@@ -3,13 +3,12 @@
 /**
  * Module dependencies.
  */
-const fs = require("fs");
+
 var app = require("../app");
 var debug = require("debug")("blog-api:server");
 var http = require("http");
 const socketIO = require("socket.io");
 const messengerController = require("../controllers/messengerController");
-const { verifyToken } = require("../controllers/middleWare/verifyToken");
 
 /**
  * Get port from environment and store in Express.
@@ -23,7 +22,6 @@ app.set("port", port);
  */
 
 var server = http.createServer(app);
-server.maxHeadersCount = 0; // Set the desired max header size
 
 // Set up CORS options
 const corsOptions = {
@@ -44,88 +42,101 @@ function getUserIdSocketId(userId) {
 }
 // Socket.IO logic
 io.on("connection", async (socket) => {
-  const getSenderProfileId = async (token) => {
-    try {
-      const senderProfile = await verifyToken(token);
-      return senderProfile ? senderProfile._id : null;
-    } catch (error) {
-      console.error("Error verifying token:", error);
-      return null;
-    }
-  };
+  const sender = socket.handshake.query.sender;
 
-  // Usage:
-  const sender = await getSenderProfileId(socket.handshake.query.token);
+  // const sender = socket.handshake.query.id;
 
-  // Perform authentication and call next() if successful
-  if (!sender) {
-    return next(new Error("Authentication failed"));
-  }
+  // socket.join(sender);
+  // socket.join(id);
+  socketToUserMap[sender] = socket.id;
 
-  // Otherwise, disconnect the socket
+  // console.log("User connected:", sender);
 
-  // const senderProfile = await verifyToken(socket.handshake.query.token)=>((profile)=>profile._id);
-  // const sender = senderProfile._id;
-  // console.log(sender);
-  // const sender = socket.handshake.query.sender;
-  socketToUserMap[sender._id] = socket.id;
+  // const recipients = ["65b67d09db0fb3802374e2f5", "65b519d8e4f9c93ba546f5d7"];
 
-  let userIdsArray = Object.keys(socketToUserMap);
-  io.emit("activeUsers", { userIdsArray });
-
+  // Handle incoming messages
   socket.on("sendMessage", async (message) => {
+    // Access userId using the mapping
+
+    // const recievers = socket.handshake.query.recievers;
+    // console.log(message);
+
     const socketId = socketToUserMap[sender];
-    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, false, message.conId);
+
+    // console.log("socketToUserMap:", socketToUserMap);
+    // console.log("getUserIdSocketId:", getUserIdSocketId(sender));
+    // console.log("socketId:", socketId);
+    // console.log("socket.id:", socket.id);
+    // Broadcast the message to all connected clients
+    // io.emit("receiveMessage", message);
+
+    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, false);
+
+    // console.log(newMsg);
+
+    // const newMsg = { text: message.text, sender: sender, recievers: message.recievers };
     const recievers = [...message.recievers, sender];
+
+    // console.log(recievers);
+
+    // io.to(getUserIdSocketId(recievers)).emit("receiveMessage", { newMsg });
+
     recievers.forEach((recipient) => {
       io.to(getUserIdSocketId(recipient)).emit("receiveMessage", { conversation });
     });
+
+    // If userId is available, emit the message to that specific user
+    // if (socketId) {
+    //   io.to(socketId).emit("receiveMessage", { text: message.text, sender: sender, recievers: message.recievers });
+    // }
   });
 
   socket.on("groupMessage", async (message) => {
+    // Access userId using the mapping
+
+    // const recievers = socket.handshake.query.recievers;
+    // console.log(message);
+
     const socketId = socketToUserMap[sender];
-    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, true, message.conId);
+
+    // console.log("socketToUserMap:", socketToUserMap);
+    // console.log("getUserIdSocketId:", getUserIdSocketId(sender));
+    // console.log("socketId:", socketId);
+    // console.log("socket.id:", socket.id);
+    // Broadcast the message to all connected clients
+    // io.emit("receiveMessage", message);
+
+    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, true);
+
+    // console.log(newMsg);
+
+    // const newMsg = { text: message.text, sender: sender, recievers: message.recievers };
     const recievers = [...message.recievers, sender];
-    recievers.forEach((recipient) => {
-      io.to(getUserIdSocketId(recipient)).emit("receiveGroupMessage", { conversation });
-    });
-  });
 
-  socket.on("image", async (message) => {
-    // Save the image to a file or process it as needed
-    // const base64Data = message.text.file.buffer.toString("base64");
-    // const base64Data = message.text.replace(/^data:image\/png;base64,/, ""); //
-    // fs.writeFileSync("image.png", base64Data, "base64");
+    // console.log(recievers);
 
-    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, false, message.conId, "image");
-    const recievers = [...message.recievers, sender];
-    recievers.forEach((recipient) => {
-      io.to(getUserIdSocketId(recipient)).emit("receiveMessage", { conversation });
-    });
+    // io.to(getUserIdSocketId(recievers)).emit("receiveMessage", { newMsg });
 
-    console.log("Image received");
-  });
-
-  socket.on("groupImage", async (message) => {
-    // Save the image to a file or process it as needed
-    // const base64Data = message.text.file.buffer.toString("base64");
-    // const base64Data = message.text.replace(/^data:image\/png;base64,/, ""); //
-    // fs.writeFileSync("image.png", base64Data, "base64");
-
-    const conversation = await messengerController.createMessage(sender, message.text, message.recievers, true, message.conId, "image");
-    const recievers = [...message.recievers, sender];
     recievers.forEach((recipient) => {
       io.to(getUserIdSocketId(recipient)).emit("receiveGroupMessage", { conversation });
     });
 
-    console.log("Image received");
+    // If userId is available, emit the message to that specific user
+    // if (socketId) {
+    //   io.to(socketId).emit("receiveMessage", { text: message.text, sender: sender, recievers: message.recievers });
+    // }
   });
+
+  // Emit Messages to Specific Users
+
+  const targetSocketId = getUserIdSocketId(sender);
+  io.to(targetSocketId).emit("privateMessage", { text: "Hello, private message!" });
 
   // Handle disconnection
   socket.on("disconnect", () => {
+    // console.log("User disconnected:", socket.id);
+    // Remove the mapping when a user disconnects
     delete socketToUserMap[socket.id];
-    let userIdsArray = Object.keys(socketToUserMap);
-    io.emit("activeUsers", { userIdsArray });
   });
 });
 

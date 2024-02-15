@@ -4,16 +4,18 @@ const BlackJWT = require("../models/blackjwt");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const passport = require("passport");
 
 const fs = require("fs");
 
-const { sendConfirmationEmail, sendResetPWEmail } = require("./services/sendMail");
-const { verifyToken, verifyRefreshToken } = require("./services/verifyToken");
-const { generateToken, generateRefreshToken } = require("./services/generateToken");
+const { sendConfirmationEmail, sendResetPWEmail } = require("./middleWare/sendMail");
+const { verifyRefreshToken, verifyToken } = require("./middleWare/verifyToken");
+const { generateToken, generateRefreshToken } = require("./middleWare/generateToken");
 
 const userController = {
   async test(req, res, next) {
-    res.status(201).json({ message: "Test Controller success!" });
+    const me = req.user.toJSON();
+    res.json({ me: me });
   },
   // Create a new author
   async signup(req, res, next) {
@@ -272,26 +274,23 @@ const userController = {
     }
   },
   async changePass(req, res, next) {
-    console.log(req.body.currentPassword);
     const user = req.user;
+    if (user.email === "Blake_Brekke91@gmail.com" || user.email === "Khalil_Stark16@gmail.com") {
+      res.status(401).json({ message: "Can't Change Password of the Guest Account." });
+      return;
+    }
     if (user) {
       try {
-        const { currentPassword, newPassword, repeatPassword } = req.body;
+        const { newPassword, repeatPassword } = req.body;
 
         // Check if required fields are provided
-        if (!currentPassword || !newPassword || !repeatPassword) {
+        if (!newPassword || !repeatPassword) {
           return res.status(400).json({ message: "All fields are required." });
         }
 
         // Check if passwords match
         if (newPassword !== repeatPassword) {
           return res.status(400).json({ message: "Passwords do not match." });
-        }
-
-        // Check if the current password is correct
-        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-        if (!isPasswordValid) {
-          return res.status(401).json({ message: "Current password is incorrect." });
         }
 
         if (newPassword === user.email) {
@@ -343,65 +342,7 @@ const userController = {
       }
     }
   },
-  // Authenticate author with jwt
 
-  async signin(req, res) {
-    try {
-      // Get the user credentials from the request body
-      const email = req.body.email;
-      const password = req.body.password;
-
-      // Find the user by their username
-      const user = await User.findOne({ email });
-
-      // If the user is not found, return an error
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      if (!user.isActive) {
-        return res.status(404).json({ message: "Please verify your email first, to Login." });
-      }
-
-      // Verify the password
-      const match = await bcrypt.compare(password, user.password);
-
-      // If the password is incorrect, return an error
-      if (!match) {
-        return res.status(401).json({ message: "Incorrect password" });
-      }
-
-      // Generate a JWT token for the user
-      const token = await generateToken(user);
-      const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
-      const refreshtoken = await generateRefreshToken(user);
-
-      // Set the JWT Refresh token in  browser cookie
-      // res.cookie("refreshtoken", refreshtoken, {
-      //   // expires: new Date(Date.now() + 60 * 60 * 1000), // Expires in 1 hour
-      //   expires: new Date(Date.now() + 60 * 60 * 24 * 10 * 1000), // Expires in 10 days
-      //   httpsOnly: true,
-      //   sameSite: "None",
-      //   secure: true,
-      // });
-
-      // The above code is unable to set cookie on live site. I've tested different samesite attribute but result it same.
-
-      // res.header("Set-Cookie", "refreshtoken=" + refreshtoken + ";Path=/;HttpOnly;Secure;SameSite=None;Expires=864000");
-      const expirationDate = new Date();
-      expirationDate.setTime(expirationDate.getTime() + 864000 * 1000); // Add milliseconds
-      const expires = expirationDate.toUTCString();
-
-      res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly; Secure; SameSite=None; Expires=${expires}`);
-      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
-
-      // Send the token to the user
-      return res.status(200).json({ token, expire: tokenExpires, user: frontUser });
-    } catch (error) {
-      // Handle token verification errors
-      console.error("Error during signing In:", error);
-      res.status(400).json({ message: "Internal server error." });
-    }
-  },
   async refresh(req, res) {
     // Verify refresh token
 
@@ -436,19 +377,52 @@ const userController = {
       res.status(401).json({ message: errorMessage });
     }
   },
-  async validateLoginStatus(req, res) {
+  async loadme(req, res) {
+    // Verify refresh token
+
     try {
-      if (req.headers.authorization) {
-        let authToken = req.headers.authorization;
-
-        // Validate the auth token.
-        const user = await verifyToken(authToken);
-        if (user) {
-          // req.session.user = user;
-
-          return res.json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
-        }
+      if (!req.cookies.auth_cookie) {
+        return res.status(500).json({ message: "No auth Token Provided.", message: true });
       }
+
+      const authToken = req.cookies.auth_cookie;
+
+      // Validate the auth token.
+      // passport.authenticate(authToken, { session: false });
+      const user = await verifyToken(authToken);
+      // const user = req.user;
+
+      // If the user is not found, return an error
+      if (!user) {
+        return res.status(404).json({ message: "User not found", message: true });
+      }
+
+      // Generate a JWT token for the user
+      const token = await generateToken(user);
+      const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
+      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
+      // Send the token to the user
+      return res.json({ token, expire: tokenExpires, user: frontUser });
+    } catch (err) {
+      let errorMessage = "Internal server error";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      res.status(401).json({ message: errorMessage });
+    }
+  },
+  async validateLoginStatus(req, res) {
+    // console.log(req);
+    // console.log(req.authorization);
+    // console.log("came for validation.");
+    try {
+      const user = req.user;
+      if (user) {
+        return res.json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
+      }
+
       return res.json({});
     } catch (err) {
       let errorMessage = "Internal server error";
@@ -474,6 +448,7 @@ const userController = {
 
         // res.clearCookie("token");
         res.clearCookie("refreshtoken");
+        res.clearCookie("auth_cookie");
         return res.status(201).json({ logout: true, message: "Signed Out successfully!" });
       } else {
         return res.status(401).json({ logout: false, message: "You need to be logged in to logout." });
@@ -623,13 +598,15 @@ const userController = {
 
       const filePath = user.coverPicture;
       // console.log(filePath);
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) {
-          console.error("Error deleting file:", unlinkErr);
-        } else {
-          console.log(`Deleted file: ${filePath}`);
-        }
-      });
+      if (filePath) {
+        fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting file:", unlinkErr);
+          } else {
+            console.log(`Deleted file: ${filePath}`);
+          }
+        });
+      }
 
       // Delete Previous Img ENDS
       try {

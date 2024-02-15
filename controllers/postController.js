@@ -1,49 +1,56 @@
-const User = require("../models/userModel");
 const Post = require("../models/postModel");
-const BlackJWT = require("../models/blackjwt");
-
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-
-const fs = require("fs");
-
-const { sendConfirmationEmail, sendResetPWEmail } = require("./services/sendMail");
-const { verifyToken, verifyRefreshToken } = require("./services/verifyToken");
-const { generateToken, generateRefreshToken } = require("./services/generateToken");
 
 const postController = {
   // Update an existing author
   async post_create(req, res, next) {
     const user = req.user;
+    // console.log(req.body);
     try {
-      const { text } = req.body;
-      if (text.length > 200) {
+      const { text, thumbnail } = req.body;
+      if (text && text.length > 200) {
         return res.status(400).json({ message: "Post's max character lenth is 200." });
       }
       const authorId = user._id; // Assuming you have user information stored in req.user after authentication
 
-      if (!text && !req.file) {
+      if (!text && !thumbnail) {
         return res.status(400).json({ message: "Post should have image or text content." });
       }
-      if (text.replace(/\s/g, "").length == 0 && !req.file) {
+      if (text && text.replace(/\s/g, "").length == 0 && !thumbnail) {
         return res.status(400).json({ message: "Post should have image or text content." });
         return;
       }
       // Create a new post
       const newPost = new Post({
         text: text,
-        thumbnail: req.file ? req.file.buffer.toString("base64") : "", // Assuming you want to store the thumbnail as a base64 string
+        thumbnail: thumbnail ? thumbnail : "",
         author: authorId,
       });
 
       // Save the post
       const savedPost = await newPost.save();
 
+      const post = await Post.findById(savedPost._id)
+        .populate({
+          path: "author",
+          select: "username firstName lastName profilePicture",
+        })
+        .populate({
+          path: "comments",
+          populate: {
+            path: "provider",
+            select: "username firstName lastName profilePicture",
+          },
+        })
+        .populate({
+          path: "likes.provider",
+          select: "username firstName lastName profilePicture",
+        });
+
       // Update the author's posts array
       user.posts.push(savedPost._id);
       await user.save();
 
-      res.status(201).json(savedPost);
+      res.status(201).json(post);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
@@ -135,15 +142,20 @@ const postController = {
 
       res.status(200).json({ message: "Like toggled successfully" });
     } catch (error) {
-      console.error("Error adding comment:", error);
+      console.error("Error toggling like:", error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   },
   async followedUsersPosts(req, res, next) {
+    const filterdate = req.body.filterdate;
+    // console.log(filterdate);
     try {
       const currentUser = req.user;
       const followingIds = currentUser.following.map((user) => user._id);
+      // console.log(followingIds);
       // Get posts from users in the following list
+      followingIds.push(currentUser._id);
+      // console.log(followingIds);
       const posts = await Post.find({ author: { $in: followingIds } })
         .populate({
           path: "author",
@@ -162,6 +174,67 @@ const postController = {
         });
 
       res.json({ posts });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+  async followedUsersPostsAfterDate(req, res, next) {
+    try {
+      const currentUser = req.user;
+      const followingIds = currentUser.following.map((user) => user._id);
+      // console.log(followingIds);
+      // Get posts from users in the following list
+      followingIds.push(currentUser._id);
+      // console.log(followingIds);
+
+      const filterdate = req.body.filterdate;
+      // console.log(filterdate);
+      // Get posts from users in the following list
+      if (filterdate) {
+        const posts = await Post.find({
+          author: { $in: followingIds },
+          timestamp: { $gt: new Date(filterdate) }, // Filter posts created after the specified timestamp
+        })
+          .sort({ timestamp: -1 })
+          .populate({
+            path: "author",
+            select: "username firstName lastName profilePicture",
+          })
+          .populate({
+            path: "comments",
+            populate: {
+              path: "provider",
+              select: "username firstName lastName profilePicture",
+            },
+          })
+          .populate({
+            path: "likes.provider",
+            select: "username firstName lastName profilePicture",
+          });
+
+        res.json({ posts });
+      } else {
+        const posts = await Post.find({ author: { $in: followingIds } })
+          .sort({ timestamp: -1 })
+          .populate({
+            path: "author",
+            select: "username firstName lastName profilePicture",
+          })
+          .populate({
+            path: "comments",
+            populate: {
+              path: "provider",
+              select: "username firstName lastName profilePicture",
+            },
+          })
+          .populate({
+            path: "likes.provider",
+            select: "username firstName lastName profilePicture",
+          });
+
+        res.json({ posts });
+      }
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
