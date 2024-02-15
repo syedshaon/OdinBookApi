@@ -73,7 +73,7 @@ io.on("connection", async (socket) => {
 
   // Perform authentication and call next() if successful
   if (!sender) {
-    return next(new Error("Authentication failed"));
+    return new Error("Authentication failed");
   }
 
   // Otherwise, disconnect the socket
