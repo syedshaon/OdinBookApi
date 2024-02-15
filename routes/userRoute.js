@@ -51,7 +51,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 1024 * 512,
+    fileSize: 1024 * 1024 * 10,
   },
   fileFilter: fileFilter,
 });
@@ -60,7 +60,7 @@ const errorHandler = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     // A Multer error occurred when uploading
     if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).send({ message: "File size exceeds the limit (512KB)" });
+      return res.status(400).send({ message: "File size exceeds the limit (10MB)" });
     } else if (err.code === "LIMIT_UNEXPECTED_FILE") {
       // The file type is not supported.
       return res.status(400).send({ message: "The file type is not supported." });
