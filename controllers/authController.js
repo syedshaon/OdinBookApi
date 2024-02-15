@@ -8,7 +8,7 @@ const facebookAuth = require("../controllers/middleWare/facebookAuth");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const clientUrl = process.env.NODE_ENV === "production" ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
+const clientUrl = process.env.FRONT1;
 
 const authController = {
   // Update an existing author
