@@ -34,7 +34,7 @@ const authController = {
         // res.cookie("auth_error", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         // res.cookie("no_user", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         console.log("After setting cookies");
-        res.redirect(clientUrl);
+        res.redirect(clientUrl + "/login-auth-callback");
       } catch (error) {
         console.error("Error during Google authentication callback:", error);
         // res.cookie("auth_error", "true", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
