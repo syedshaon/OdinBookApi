@@ -55,7 +55,7 @@ const signin = async (req, res) => {
     expirationDate.setTime(expirationDate.getTime() + 864000 * 1000); // Add milliseconds
     const expires = expirationDate.toUTCString();
 
-    res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly; Secure; SameSite=None; Expires=${expires}`);
+    res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly:false; Secure; SameSite=None; Expires=${expires}`);
     const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
 
     // Send the token to the user
