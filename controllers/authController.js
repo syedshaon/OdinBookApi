@@ -73,7 +73,7 @@ const authController = {
 
         res.header("Set-Cookie", `auth_cookie=${token}; Path=/; HttpOnly; Secure; SameSite=None;`);
 
-        res.redirect(clientUrl);
+        res.redirect(clientUrl + "/login-auth-callback");
       } catch (error) {
         console.error("Error during Facebook authentication callback:", error);
         // res.cookie("auth_error", "true", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
