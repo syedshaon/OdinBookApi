@@ -15,6 +15,30 @@ const msgRouter = require("./routes/msgRoute");
 const session = require("cookie-session");
 
 const app = express();
+
+const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Check if the origin is in the allowed list or if it's not defined (e.g., a same-origin request)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+// Additional headers to set for cookies
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 const ImageKit = require("imagekit");
 
 const imagekit = new ImageKit({
@@ -57,47 +81,6 @@ app.use("/thumbs", express.static("thumbs"));
 
 // Enable CORS for all routes
 // app.use(cors());
-const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
-
-// Use CORS middleware with the specific origin
-// app.use(
-//   cors({
-//     origin: true,
-//     credentials: true,
-//     preflightContinue: true,
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-//     optionsSuccessStatus: 204,
-//   })
-// );
-
-// app.options("/*", (_, res) => {
-//   res.sendStatus(200);
-// });
-// app.options("*", cors());
-// app.options("*", function (req, res) {
-//   res.sendStatus(200);
-// });
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Check if the origin is in the allowed list or if it's not defined (e.g., a same-origin request)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
-
-// Additional headers to set for cookies
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
 
 // view engine setup
 // new
