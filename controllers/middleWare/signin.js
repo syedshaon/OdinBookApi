@@ -37,7 +37,7 @@ const signin = async (req, res) => {
     // Generate a JWT token for the user
     const token = await generateToken(user);
     const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
-    const refreshtoken = await generateRefreshToken(user);
+    const refreshToken = await generateRefreshToken(user);
 
     // Set the JWT Refresh token in  browser cookie
     // res.cookie("refreshtoken", refreshtoken, {
