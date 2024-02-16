@@ -26,20 +26,25 @@ const authController = {
             user.isActive = true;
             await user.save();
           }
+          console.log("Before setting cookies");
           const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
           res.cookie("auth_cookie", token, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
           res.cookie("auth_error", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
           res.cookie("no-user", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
+          console.log("After setting cookies");
           res.redirect(clientUrl);
         } else {
+          console.log("No User, Before setting cookies");
           res.cookie("no_user", "true", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
           res.cookie("auth_error", "", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
+          console.log("No user, After setting cookies");
           res.redirect(clientUrl + "/login-auth-error");
         }
       } catch (error) {
         console.error("Error during Google authentication callback:", error);
         res.cookie("auth_error", "true", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         res.cookie("no_user", "", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
+
         res.redirect(clientUrl + "/login-auth-error");
       }
     });
