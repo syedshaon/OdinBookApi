@@ -12,7 +12,7 @@ const userRouter = require("./routes/userRoute");
 const postRouter = require("./routes/postRoute");
 const authRouter = require("./routes/auth");
 const msgRouter = require("./routes/msgRoute");
-const session = require("express-session");
+const session = require("cookie-session");
 
 const app = express();
 const ImageKit = require("imagekit");
