@@ -28,7 +28,7 @@ const authController = {
         }
         // console.log("Before setting cookies");
         const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET);
-        res.header("Set-Cookie", `auth_cookie=${token}; Path=/; HttpOnly:false; Secure; SameSite=None;`);
+        res.header("Set-Cookie", `auth_cookie=${token}; Path=/; HttpOnly; Secure; SameSite=None;`);
 
         // res.cookie("auth_cookie", token, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         // res.cookie("auth_error", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
@@ -39,7 +39,7 @@ const authController = {
         console.error("Error during Google authentication callback:", error);
         // res.cookie("auth_error", "true", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         // res.cookie("no_user", "", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
-        res.header("Set-Cookie", `auth_error=true; Path=/; HttpOnly:false; Secure; SameSite=None;`);
+        res.header("Set-Cookie", `auth_error=true; Path=/; HttpOnly; Secure; SameSite=None;`);
 
         res.redirect(clientUrl + "/login-auth-error");
       }
@@ -48,7 +48,8 @@ const authController = {
   googleSigninError: (req, res) => {
     console.error("googleSigninError");
     // res.cookie("auth-fail", true, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
-    res.header("Set-Cookie", `auth_fail=true; Path=/; HttpOnly:false; Secure; SameSite=None;`);
+    res.header("Set-Cookie", `auth_fail=true; Path=/; HttpOnly; Secure; SameSite=None;`);
+
     res.redirect(clientUrl);
   },
 
@@ -69,21 +70,22 @@ const authController = {
         // res.cookie("auth_cookie", token, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         // res.cookie("auth_error", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         // res.cookie("no-user", false, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
-        res.header("Set-Cookie", `auth_cookie=${token}; Path=/; HttpOnly:false; Secure; SameSite=None;`);
+
+        res.header("Set-Cookie", `auth_cookie=${token}; Path=/; HttpOnly; Secure; SameSite=None;`);
 
         res.redirect(clientUrl);
       } catch (error) {
         console.error("Error during Facebook authentication callback:", error);
         // res.cookie("auth_error", "true", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
         // res.cookie("no_user", "", { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
-        res.header("Set-Cookie", `auth_error=true; Path=/; HttpOnly:false; Secure; SameSite=None;`);
+        res.header("Set-Cookie", `auth_error=true; Path=/; HttpOnly; Secure; SameSite=None;`);
         res.redirect(clientUrl + "/login-auth-error");
       }
     });
   },
   facebookSigninError: (req, res) => {
     // res.cookie("auth_fail", true, { sameSite: "None", secure: true, HttpOnly: false, path: "/" });
-    res.header("Set-Cookie", `auth_fail=true; Path=/; HttpOnly:false; Secure; SameSite=None;`);
+    res.header("Set-Cookie", `auth_fail=true; Path=/; HttpOnly; Secure; SameSite=None;`);
     res.redirect(clientUrl);
   },
 };
