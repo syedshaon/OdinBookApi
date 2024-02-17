@@ -107,7 +107,7 @@ const userController = {
       sendConfirmationEmail(newUser.email, token);
 
       // Respond with a success message or user data
-      res.status(201).json({ message: "Signup successful! Check your email for confirmation." });
+      res.status(201).json({ message: "Signup successful! Check your email including SPAM folder to Activate!" });
     } catch (error) {
       console.error("Error during signup:", error);
       res.status(500).json({ message: "Internal server error" });
