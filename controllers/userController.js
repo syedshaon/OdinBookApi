@@ -364,7 +364,9 @@ const userController = {
       // Generate a JWT token for the user
       const token = await generateToken(user);
       const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
-      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
+      const postsDetails = await user.getAllPosts();
+
+      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, followers: user.followers, profilePicture: user.profilePicture, coverPicture: user.coverPicture, posts: postsDetails };
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, user: frontUser });
     } catch (err) {
@@ -400,7 +402,9 @@ const userController = {
       // Generate a JWT token for the user
       const token = await generateToken(user);
       const tokenExpires = new Date(Date.now() + 60 * 15 * 1000);
-      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
+      const postsDetails = await user.getAllPosts();
+
+      const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, followers: user.followers, profilePicture: user.profilePicture, coverPicture: user.coverPicture, posts: postsDetails };
       // Send the token to the user
       return res.json({ token, expire: tokenExpires, user: frontUser });
     } catch (err) {
@@ -420,7 +424,9 @@ const userController = {
     try {
       const user = req.user;
       if (user) {
-        return res.json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
+        const postsDetails = await user.getAllPosts();
+
+        return res.json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, followers: user.followers, profilePicture: user.profilePicture, coverPicture: user.coverPicture, posts: postsDetails } });
       }
 
       return res.json({});
@@ -540,7 +546,7 @@ const userController = {
         // }
         await user.save();
 
-        return res.status(201).json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
+        return res.status(201).json({ firstName: user.firstName, lastName: user.lastName, bio: user.bio });
       } catch (err) {
         let errorMessage = "Internal server error";
 
@@ -579,7 +585,7 @@ const userController = {
 
         await user.save();
 
-        return res.status(201).json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
+        return res.status(201).json({ profilePicture: user.profilePicture });
       } catch (err) {
         let errorMessage = "Internal server error";
 
@@ -615,7 +621,7 @@ const userController = {
         }
 
         await user.save();
-        return res.status(201).json({ user: { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture } });
+        return res.status(201).json({ coverPicture: user.coverPicture });
       } catch (err) {
         let errorMessage = "Internal server error";
 

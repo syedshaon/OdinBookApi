@@ -4,6 +4,7 @@ const JwtStrategy = require("passport-jwt").Strategy;
 const LocalStrategy = require("passport-local").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const bcrypt = require("bcryptjs");
+const Posts = require("../../models/postModel");
 
 const { generateToken, generateRefreshToken } = require("./generateToken");
 
@@ -58,7 +59,14 @@ const signin = async (req, res) => {
     // res.header("Set-Cookie", `refreshtoken=${refreshtoken}; Path=/; HttpOnly:false; Secure; SameSite=None; Expires=${expires}`);
     res.header("Set-Cookie", `refreshtoken=${refreshToken}; Path=/; HttpOnly; Secure; SameSite=None;`);
 
-    const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, profilePicture: user.profilePicture, coverPicture: user.coverPicture };
+    // const postsDetails = user.posts.sort({ timestamp: -1 }).populate({
+    //   path: "comments.provider",
+    //   select: "firstName lastName username profilePicture", // Select the fields you want to include
+    // });
+
+    const postsDetails = await user.getAllPosts();
+
+    const frontUser = { id: user._id, username: user.username, firstName: user.firstName, lastName: user.lastName, bio: user.bio, pendingFriends: user.pendingFriends, friends: user.friends, following: user.following, followers: user.followers, profilePicture: user.profilePicture, coverPicture: user.coverPicture, posts: postsDetails };
 
     // Send the token to the user
     return res.status(200).json({ token, expire: tokenExpires, user: frontUser });

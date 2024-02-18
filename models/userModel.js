@@ -69,5 +69,33 @@ const userSchema = new Schema({
   },
 });
 
+// userSchema.virtual("getAllPosts").get(function () {
+//   try {
+//     // Populate the 'posts' field to get all details of the posts
+//     this.populate("posts").execPopulate();
+//     return this.posts;
+//   } catch (error) {
+//     throw error;
+//   }
+// });
+
+userSchema.methods.getAllPosts = async function () {
+  try {
+    // Populate the 'posts' field to get all details of the posts
+    await this.populate("posts");
+
+    // Now, loop through each post and populate the 'comments.provider' path
+    await Promise.all(
+      this.posts.map(async (post) => {
+        await post.populate("comments.provider", "firstName lastName username profilePicture");
+      })
+    );
+
+    return this.posts;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Compile the schema into a model and export the model
 module.exports = mongoose.model("User", userSchema);
