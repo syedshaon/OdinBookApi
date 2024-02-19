@@ -565,23 +565,11 @@ const userController = {
     if (user) {
       // Delete previous img
 
-      const filePath = user.profilePicture;
-      // console.log(filePath);
-      if (filePath) {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error("Error deleting file:", unlinkErr);
-          } else {
-            console.log(`Deleted file: ${filePath}`);
-          }
-        });
-      }
+      const { thumbnail } = req.body;
 
       // Delete Previous Img ENDS
       try {
-        if (req.file.path) {
-          user.profilePicture = req.file.path;
-        }
+        user.profilePicture = thumbnail;
 
         await user.save();
 
@@ -602,23 +590,11 @@ const userController = {
     if (user) {
       // Delete previous img
 
-      const filePath = user.coverPicture;
-      // console.log(filePath);
-      if (filePath) {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error("Error deleting file:", unlinkErr);
-          } else {
-            console.log(`Deleted file: ${filePath}`);
-          }
-        });
-      }
-
+      const { cover } = req.body;
+      console.log(cover);
       // Delete Previous Img ENDS
       try {
-        if (req.file.path) {
-          user.coverPicture = req.file.path;
-        }
+        user.coverPicture = cover;
 
         await user.save();
         return res.status(201).json({ coverPicture: user.coverPicture });

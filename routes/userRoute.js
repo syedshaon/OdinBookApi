@@ -11,69 +11,6 @@ const requireJwtAuth = passport.authenticate("jwt", { session: false });
 
 const isTokenBlacklisted = require("../controllers/middleWare/blackListCheck");
 
-// RELATED TO IMAGE UPLOAD WITH MULTER START
-const path = require("path");
-
-const multer = require("multer");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // cb(null, __dirname);
-    // cb(null, path.join(__dirname, '/uploads/'));
-    cb(null, "./uploads");
-  },
-  filename: function (req, file, cb) {
-    // cb(null, new Date().toISOString() + file.originalname);
-    cb(null, uuidv4() + "~" + file.originalname);
-  },
-});
-
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     return cb(null, "./uploads");
-//   },
-//   filename: function (req, file, cb) {
-//     return cb(null, `${Date.now()}_${file.originalname}`);
-//   },
-// });
-
-// const upload = multer({ storage });
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/webp") {
-    cb(null, true);
-  } else {
-    cb(null, false);
-    return cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 10,
-  },
-  fileFilter: fileFilter,
-});
-
-const errorHandler = (err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    // A Multer error occurred when uploading
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).send({ message: "File size exceeds the limit (10MB)" });
-    } else if (err.code === "LIMIT_UNEXPECTED_FILE") {
-      // The file type is not supported.
-      return res.status(400).send({ message: "The file type is not supported." });
-    }
-    // Handle other Multer errors here, if needed
-  } else {
-    // An unknown error occurred
-    console.error(err);
-    return res.status(500).send({ message: "An error occurred while uploading the file" });
-  }
-};
-// RELATED TO IMAGE UPLOAD WITH MULTER END
-
 // router.get("/test", isTokenBlacklisted, requireJwtAuth, userController.test);
 // ################### Sign Up #############################
 //  DONE
@@ -109,8 +46,8 @@ router.post("/signout", userController.signout);
 
 router.get("/update", isTokenBlacklisted, requireJwtAuth, userController.user_update_get);
 router.put("/update", isTokenBlacklisted, requireJwtAuth, userController.userUpdate);
-router.put("/updateProfilePic", upload.single("file"), errorHandler, isTokenBlacklisted, requireJwtAuth, userController.updateProfilePic);
-router.put("/updateCoverPic", upload.single("file"), errorHandler, isTokenBlacklisted, requireJwtAuth, userController.updateCoverPic);
+router.put("/updateProfilePic", isTokenBlacklisted, requireJwtAuth, userController.updateProfilePic);
+router.put("/updateCoverPic", isTokenBlacklisted, requireJwtAuth, userController.updateCoverPic);
 
 router.get("/profile-details/:uid", isTokenBlacklisted, requireJwtAuth, userController.profileDetails);
 
