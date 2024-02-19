@@ -36,7 +36,8 @@ passport.use(
         username: userName,
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
-        profilePicture: profile.photos[0].value,
+        // Turning following off so all images comes from imagekit
+        // profilePicture: profile.photos[0].value,
         email: profile.emails[0].value,
       };
 
