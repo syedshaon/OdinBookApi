@@ -27,6 +27,10 @@ const signin = async (req, res) => {
       return res.status(404).json({ type: "verify", message: "Please verify your email first, to Login." });
     }
 
+    if (!user.password) {
+      return res.status(404).json({ type: "socialSignup", message: "Please use Social Login then set a new Password." });
+    }
+
     // Verify the password
     const match = await bcrypt.compare(password, user.password);
 
