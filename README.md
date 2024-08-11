@@ -45,7 +45,7 @@ Add environment variables and run "npm run start"
 
 ## Backend:
 
-For production
+### For production
 
 FACEBOOK_APP_ID=""
 FACEBOOK_CALLBACK_URL=""
@@ -68,7 +68,7 @@ imagekit_publicKey="public_D"
 imagekit_urlEndpoint=""
 mongoCon="mongodb+sr"
 
-For development
+### For development
 
 FRONT1="http://localhost:5173"
 FRONT2="http://localhost:5174"
