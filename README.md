@@ -21,6 +21,8 @@ This project is done for the fulfillment of the Odin Project Full Stack JavaScri
     - [For Development](#for-development)
   - [Frontend](#frontend)
 
+### Check API Documentation from [this Link.](https://documenter.getpostman.com/view/32081062/2sAXjQ3qZu)
+
 ## Features
 
 This application offers the following features:
@@ -38,7 +40,8 @@ This application offers the following features:
 
 #### Signup
 
-- **Signup with Google**: 
+- **Signup with Google**:
+
   - An user profile with `username`, `firstname`, `lastname`, `isActive = true` is created.
   - User is sent to the front-end with a Secret JWT token as `auth_cookie` cookie.
   - Front-end retrieves JWT token which will be used for any future request. Also gets a Refresh token.
@@ -53,6 +56,7 @@ This application offers the following features:
 #### Signin
 
 - **Continue with Google**:
+
   - An user profile with `username`, `firstname`, `lastname`, `isActive = true` is created.
   - User is sent to the front-end with a Secret JWT token as `auth_cookie` cookie.
   - Front-end retrieves JWT token which will be used for any future request. Also gets a Refresh token.
@@ -135,7 +139,6 @@ This application offers the following features:
 - Vite
 - Tailwind CSS
 - Redux Toolkit
-
 
 ## Screenshots
 

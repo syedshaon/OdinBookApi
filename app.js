@@ -17,6 +17,8 @@ const session = require("cookie-session");
 const app = express();
 
 const allowedOrigins = [process.env.FRONT1, process.env.FRONT2];
+const keepServerAlive = require("keep-alive-package");
+keepServerAlive("https://odinbook-xwdo.onrender.com/test", "1m");
 
 app.use(
   cors({
@@ -101,6 +103,9 @@ app.use("/api", userRouter);
 app.use("/api/posts", postRouter);
 app.use("/auth", authRouter);
 app.use("/msg", msgRouter);
+app.get("/test", function (req, res) {
+  res.send("Backend Running!");
+});
 app.get("/imagekit_auth", function (req, res) {
   var result = imagekit.getAuthenticationParameters();
   res.send(result);
